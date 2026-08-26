@@ -4,7 +4,9 @@
 
 ## Status
 
-**Phase 0 — planning: ✅ complete** (docs 01–10, this file). Everything after this line is *not yet implemented*.
+**Phase 1 — data pipeline: in progress.** Planning, repository foundation, and
+canonical record contracts are complete. Domain tools, paired generation, splits,
+and manifests are not yet implemented.
 
 ---
 

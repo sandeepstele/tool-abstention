@@ -1,6 +1,8 @@
 # 04 — Architecture
 
-> Repo layout, components, and data flow. This is the *planned* structure — nothing is implemented yet (see `08-roadmap.md`, Phase 0).
+> Repo layout, components, and data flow. The foundation and canonical record
+> contracts are implemented; generators, training, and evaluation remain planned
+> (see `08-roadmap.md`).
 
 ## 1. Design principles
 
@@ -74,6 +76,10 @@ tool-abstention/
 ## 3. Components
 
 ### 3.1 `data/` — construction
+- `src/tool_abstention/taxonomy.py` now defines the five decision classes and
+  pairing enums. `records.py` is the strict Pydantic source of truth for tool,
+  task, pair, prediction, and evaluation artifacts; `schemas.py` exports their
+  deterministic JSON Schemas and validates JSON records.
 - `taxonomy.py` is the **single source of truth** for the five classes (see `05-data-plan.md`). Everything else imports from it; no magic strings.
 - `tools.py` holds a registry of *mock* tool schemas (OpenAI function-calling JSON-Schema style) plus deterministic executors so a "tool call" can actually be *executed* for `should-act` tasks (keeps the harness honest).
 - `generate.py` produces **paired tasks**: each task has a `should-act` and a `should-abstain` variant via a controlled perturbation (mirroring AgentAbstain's paired design, but single-turn and rule-labeled).

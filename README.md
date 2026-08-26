@@ -43,8 +43,9 @@ future implementation and experiment session.
 
 ## Status
 
-**Phase 0 — research planning complete. Milestone A repository foundation is
-implemented.** See [`docs/08-roadmap.md`](docs/08-roadmap.md) and
+**Phase 1 — data pipeline in progress. Repository foundation and canonical record
+contracts are implemented; task generation is next.** See
+[`docs/08-roadmap.md`](docs/08-roadmap.md) and
 [`docs/11-implementation-plan.md`](docs/11-implementation-plan.md).
 
 ## Development setup
@@ -57,11 +58,17 @@ make setup
 make check
 uv run python -m tool_abstention --help
 uv run tool-abstention validate-config configs/project.yaml
+uv run tool-abstention export-schemas /tmp/tool-abstention-schemas
+uv run tool-abstention validate-record task path/to/task.json
 ```
 
 `make check` runs Ruff formatting and lint checks, strict mypy type checking,
 and the pytest suite with coverage. GitHub Actions runs the same CPU-only command;
 foundation checks do not download model weights or require Apple Silicon.
+
+Canonical task, pair, prediction, and evaluation records are strict immutable
+Pydantic models. JSON Schema exports are deterministic and unknown record fields
+are rejected. Tool parameter schemas use JSON Schema Draft 2020-12.
 
 ## Stack (planned)
 

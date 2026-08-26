@@ -5,6 +5,78 @@ machine-readable experiment logs and Git history. New entries are added in rever
 chronological order and follow the protocol in
 [`docs/11-implementation-plan.md`](docs/11-implementation-plan.md#5-documentation-protocol).
 
+## 2026-08-26 — Implement Milestone B taxonomy and record contracts
+
+### Objective
+
+Freeze the strict public contracts shared by future data generation, training,
+inference, and evaluation without implementing domain data or model behavior.
+
+### Changes
+
+- Added canonical enums for five decision classes, task variants, dataset splits,
+  and the four act-to-abstain perturbations.
+- Added immutable, unknown-field-rejecting Pydantic contracts for tools, task
+  records, task pairs, expected behavior, parsed calls, predictions, and per-example
+  evaluations.
+- Modeled expected behavior as discriminated `CALL`, `ANSWER`, `CLARIFY`, `REFUSE`,
+  and `NOOP` variants; added five deterministic answer-validator descriptions.
+- Added Draft 2020-12 tool-schema validation and expected-call argument validation
+  using the pinned `jsonschema` dependency.
+- Added recursive finite JSON-value validation for environment state, arguments,
+  expected results, and domain-validator parameters.
+- Added deterministic JSON Schema export and JSON record validation APIs.
+- Added `export-schemas` and `validate-record` CLI commands with concise errors.
+- Added 46 contract/schema/CLI tests, bringing the suite to 66 tests.
+- Updated README, architecture, and roadmap status to reflect implemented contracts.
+
+### Decisions and rationale
+
+- **Pydantic is the source of truth.** JSON Schemas are derived, canonicalized
+  artifacts rather than independently maintained definitions.
+- **Expected behavior is a discriminated union.** Invalid combinations cannot be
+  represented as a bag of nullable fields.
+- **Perturbations map to exactly one abstention label.** This prevents a generator
+  from silently labeling a removed-tool example as `ANSWER`, for example.
+- **Tool arguments are validated now.** Catching schema/argument contradictions at
+  record construction keeps invalid `CALL` examples out of future datasets.
+- **Semantic one-change pair comparison is deferred.** Milestone B validates pair
+  identity and shared metadata; Milestone C will understand domain semantics.
+
+### Commands and outcomes
+
+- `uv lock` resolved 27 packages after adding `jsonschema`, then 28 after adding
+  `types-jsonschema`; CPython 3.12.13 remained the selected interpreter.
+- Initial format check reported required layouts in the CLI and record models;
+  those layouts were applied without weakening formatting rules.
+- Ruff then reported `RUF036` for union ordering; moved `None` to the end.
+- Strict mypy reported missing jsonschema stubs; pinned `types-jsonschema` and mypy
+  passed across 16 source files before tests were added.
+- The first full contract `make check` requested two test formatting changes; they
+  were applied manually.
+- The next `make check` passed 66 tests with 98.94% coverage, clean Ruff, and strict
+  mypy across 19 source files.
+- Exported all four schemas into a temporary directory and recorded fixed SHA-256
+  vectors in `test_schemas.py`; no generated schemas were added to the repository.
+- Final `uv sync --locked`, `git diff --check`, and CLI help smoke test passed.
+- Definitive `make check` passed: 32 files formatted, Ruff clean, strict mypy clean
+  across 19 source files, and 67 tests passed with 99.20% total coverage; the
+  public record models themselves reached 100% statement coverage.
+
+### Open issues
+
+- Registered domain answer validators are declarative only; their runtime registry
+  belongs to the deterministic evaluator milestone.
+- Pair validation does not yet prove semantic single-perturbation equivalence; that
+  requires the productivity domain state and tool semantics in Milestone C.
+- Prediction records preserve parsed calls but no model-specific parser exists yet.
+
+### Next action
+
+Implement Milestone C: deterministic in-memory productivity tools, seeded templates,
+all four perturbations, approximately 40 development pairs, pair-diff auditing, and
+manual inspection recorded here.
+
 ## 2026-08-26 — Implement Milestone A repository foundation
 
 ### Objective
