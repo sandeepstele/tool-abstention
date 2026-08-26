@@ -7,6 +7,7 @@ from typing import cast
 
 from tool_abstention import __version__
 from tool_abstention.config import ProjectConfig, load_yaml_config
+from tool_abstention.harness import evaluate_files
 from tool_abstention.productivity import (
     audit_pairs,
     build_productivity_dataset,
@@ -50,6 +51,13 @@ def build_parser() -> argparse.ArgumentParser:
         "audit-pairs", help="print every pair for human inspection"
     )
     audit.add_argument("path", type=Path)
+
+    evaluate = subparsers.add_parser(
+        "evaluate", help="evaluate stored predictions against canonical tasks"
+    )
+    evaluate.add_argument("--tasks", required=True, type=Path)
+    evaluate.add_argument("--predictions", required=True, type=Path)
+    evaluate.add_argument("--output", required=True, type=Path)
     return parser
 
 
@@ -80,6 +88,10 @@ def main(argv: Sequence[str] | None = None) -> None:
             return
         if args.command == "audit-pairs":
             print(audit_pairs(load_pairs(args.path)))
+            return
+        if args.command == "evaluate":
+            metrics = evaluate_files(args.tasks, args.predictions, args.output)
+            print(metrics.model_dump_json(indent=2))
             return
     except (OSError, ValueError) as error:
         parser.exit(2, f"error: {error}\n")

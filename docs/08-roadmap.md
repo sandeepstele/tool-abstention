@@ -5,9 +5,9 @@
 ## Status
 
 **Phase 1 — data pipeline: in progress.** Planning, repository foundation,
-canonical contracts, and the 40-pair productivity development slice are complete.
-Finance/weather expansion, leakage-safe splits, and the full dataset manifest are
-not yet implemented.
+canonical contracts, the 40-pair productivity development slice, and deterministic
+stored-prediction evaluation are complete. Finance/weather expansion, leakage-safe
+splits, and the full dataset manifest are not yet implemented.
 
 ---
 

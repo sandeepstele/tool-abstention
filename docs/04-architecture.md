@@ -93,6 +93,11 @@ tool-abstention/
 - `launch.py` reads a `configs/models/*.yaml`, seeds everything, runs, and writes to `results/`.
 
 ### 3.3 `eval/` — evaluation
+- `src/tool_abstention/evaluator.py`, `metrics.py`, and `harness.py` now implement
+  stored-output tool-call parsing, five-class deterministic scoring, all core
+  aggregate/paired metrics, and canonical result artifacts. The implementation is
+  package-flat today; the planned `eval/` subpackage split can happen when model
+  adapters are added.
 - `harness.py` runs greedy/decode over the test set and captures the *raw* model output (token text) — never a pre-baked score.
 - `judge.py` classifies output into one of the five classes using rules only (tool-call syntax parse, refusal/ask lexicons, answer non-emptiness, no-op markers).
 - `metrics.py` computes the report metrics (see `07-evaluation-plan.md`).

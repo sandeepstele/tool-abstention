@@ -5,6 +5,78 @@ machine-readable experiment logs and Git history. New entries are added in rever
 chronological order and follow the protocol in
 [`docs/11-implementation-plan.md`](docs/11-implementation-plan.md#5-documentation-protocol).
 
+## 2026-08-26 — Implement Milestone D deterministic evaluator
+
+### Objective
+
+Implement replayable, judge-free scoring before any model inference: parse stored
+outputs, classify five behaviors, validate correctness, compute paired metrics, and
+regression-test the entire repository.
+
+### Changes
+
+- Added parsing for canonical JSON, wrapped tool calls, single-item OpenAI
+  `tool_calls`, direct function objects, and Qwen-style `<tool_call>` blocks.
+- Added explicit malformed-tool-attempt detection so broken calls cannot pass as
+  direct answers or abstention.
+- Added deterministic text normalization and correctness checks for exact,
+  normalized-text, numeric-tolerance, set-valued, clarification, refusal, and no-op
+  behavior.
+- Added inference-error and task-ID consistency handling with machine-readable
+  reason codes on every evaluation.
+- Added accuracy, strict paired accuracy, macro-F1, per-class precision/recall/F1,
+  act accuracy, abstention accuracy, and abstention-denominated tool hallucination.
+- Added a stored-prediction harness that writes canonical `evaluations.jsonl` and
+  `metrics.json`, allowing evaluator changes without rerunning inference.
+- Added the `evaluate` CLI command and documented its use.
+- Added a deterministic 200-case adversarial construction matrix spanning all five
+  classes, plus parser, validator, metric, harness, and CLI tests.
+
+### Decisions and rationale
+
+- **Malformed tool attempts count as `CALL` failures.** Treating them as prose would
+  undercount hallucination and inflate abstention.
+- **Prediction storage remains separate from evaluation.** Raw inference can be
+  replayed after a rule fix without consuming model compute again.
+- **Text classification uses task-aware structural requirements.** A clarification
+  must be interrogative and mention the declared missing slot; generic hedging does
+  not qualify.
+- **Domain validators fail closed for now.** No arbitrary validator ID is executed
+  until a reviewed registry is implemented.
+- **Calibration claims remain conservative.** The 200-case construction matrix is a
+  deterministic regression suite, not a substitute for human labeling real model
+  outputs; the ≥95% human-agreement gate remains open.
+
+### Commands and outcomes
+
+- Ruff initially requested evaluator and test formatting; all required layouts were
+  applied without weakening rules.
+- Strict mypy found float-compatible ratio typing and an unannotated calibration
+  collection; both were made explicit.
+- The first expanded suite found one incorrect test assumption: direct
+  `{name, arguments}` inside a single `tool_calls` item is intentionally supported.
+  The case was moved to the supported-format matrix.
+- Final `make check` passed: 39 files formatted, Ruff clean, strict mypy clean across
+  26 source files, and 116 tests passed with 99.22% coverage.
+- `uv sync --locked` checked all 27 installed packages.
+- Regenerated the productivity dataset and confirmed byte-identical hashes:
+  `f15950c3...e4c904` for tasks and `78f967ce...f261c` for the manifest.
+- Exported all four public schemas into a temporary directory and confirmed the
+  expected file count; `git diff --check` also passed.
+
+### Open issues
+
+- The required 200-output human calibration must be performed on actual baseline
+  model responses before evaluator agreement is reported.
+- Domain answer-validator execution remains intentionally disabled.
+- Model-specific streaming/multi-call parsing is outside this single-call v1 scope.
+
+### Next action
+
+Implement Milestone E: add finance and weather/geo domains, expand template
+diversity, create grouped leakage-safe train/validation/test splits, freeze the test
+set, and produce the full dataset card and manifest. Baseline local inference follows.
+
 ## 2026-08-26 — Implement Milestone C productivity vertical slice
 
 ### Objective

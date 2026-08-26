@@ -2,6 +2,12 @@
 
 > Metrics, harness, baselines, and testing. The core metrics are **rule-based and judge-free** (a stated non-goal is LLM-judge dependence); the harness is deterministic and portable off-Mac.
 
+**Implementation status:** stored-prediction parsing, five-class deterministic
+judgment, core aggregate metrics, paired metrics, and replayable result output are
+implemented. A 200-case construction-based adversarial matrix passes. The separate
+200-sample human-labeled calibration on real model outputs remains required before
+reporting evaluator agreement.
+
 ## 1. Metrics
 
 ### 1.1 Headline metric — paired accuracy

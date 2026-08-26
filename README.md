@@ -43,9 +43,9 @@ future implementation and experiment session.
 
 ## Status
 
-**Phase 1 — data pipeline in progress. Repository foundation, canonical record
-contracts, and a 40-pair productivity development slice are implemented. Domain
-expansion and dataset splits remain.** See
+**Phase 1 — data pipeline in progress. Repository foundation, canonical contracts,
+a 40-pair productivity slice, and deterministic evaluation are implemented. Domain
+expansion and leakage-safe splits remain before baseline model inference.** See
 [`docs/08-roadmap.md`](docs/08-roadmap.md) and
 [`docs/11-implementation-plan.md`](docs/11-implementation-plan.md).
 
@@ -63,6 +63,10 @@ uv run tool-abstention validate-config configs/project.yaml
 uv run tool-abstention export-schemas /tmp/tool-abstention-schemas
 uv run tool-abstention validate-record task path/to/task.json
 uv run tool-abstention audit-pairs data/raw/productivity/tasks.jsonl
+uv run tool-abstention evaluate \
+  --tasks data/raw/productivity/tasks.jsonl \
+  --predictions path/to/predictions.jsonl \
+  --output results/local-eval
 ```
 
 `make check` runs Ruff formatting and lint checks, strict mypy type checking,
@@ -76,6 +80,11 @@ are rejected. Tool parameter schemas use JSON Schema Draft 2020-12.
 `make data` deterministically generates 40 productivity pairs (80 tasks) across
 `ANSWER`, `CLARIFY`, `REFUSE`, and `NOOP`. Generated data is ignored by Git and
 accompanied by a content-hashed manifest.
+
+Stored predictions can be evaluated without rerunning inference. The evaluator
+parses plain/OpenAI/Qwen-style tool calls, validates class-specific behavior, and
+writes per-example judgments plus accuracy, paired accuracy, macro-F1, act and
+abstention accuracy, hallucination rate, and per-class metrics.
 
 ## Stack (planned)
 

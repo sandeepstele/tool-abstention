@@ -5,7 +5,11 @@ from pathlib import Path
 import pytest
 
 from tool_abstention.cli import main
+from tool_abstention.productivity import ProductivityConfig, generate_productivity_pairs
+from tool_abstention.taxonomy import DatasetSplit
+from tool_abstention.util.jsonl import write_jsonl
 
+from .test_evaluator import correct_prediction
 from .test_records import act_task
 
 
@@ -81,3 +85,35 @@ def test_generate_and_audit_productivity_commands(
     main(["audit-pairs", str(output / "tasks.jsonl")])
     audit = capsys.readouterr().out
     assert audit.count("PAIR productivity-") == 4
+
+
+def test_evaluate_command(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    pairs = generate_productivity_pairs(
+        ProductivityConfig(
+            seed=0,
+            pairs_per_class=1,
+            generator_version="1.0.0",
+            split=DatasetSplit.TRAIN,
+        )
+    )
+    tasks = [task for pair in pairs for task in (pair.act, pair.abstain)]
+    task_path = tmp_path / "tasks.jsonl"
+    prediction_path = tmp_path / "predictions.jsonl"
+    output = tmp_path / "results"
+    write_jsonl(task_path, [task.model_dump(mode="json") for task in tasks])
+    write_jsonl(
+        prediction_path,
+        [correct_prediction(task).model_dump(mode="json") for task in tasks],
+    )
+    main(
+        [
+            "evaluate",
+            "--tasks",
+            str(task_path),
+            "--predictions",
+            str(prediction_path),
+            "--output",
+            str(output),
+        ]
+    )
+    assert '"paired_accuracy": 1.0' in capsys.readouterr().out
