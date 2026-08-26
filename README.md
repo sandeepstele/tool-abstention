@@ -43,8 +43,9 @@ future implementation and experiment session.
 
 ## Status
 
-**Phase 1 — data pipeline in progress. Repository foundation and canonical record
-contracts are implemented; task generation is next.** See
+**Phase 1 — data pipeline in progress. Repository foundation, canonical record
+contracts, and a 40-pair productivity development slice are implemented. Domain
+expansion and dataset splits remain.** See
 [`docs/08-roadmap.md`](docs/08-roadmap.md) and
 [`docs/11-implementation-plan.md`](docs/11-implementation-plan.md).
 
@@ -56,10 +57,12 @@ The foundation targets Python 3.12 and uses
 ```bash
 make setup
 make check
+make data
 uv run python -m tool_abstention --help
 uv run tool-abstention validate-config configs/project.yaml
 uv run tool-abstention export-schemas /tmp/tool-abstention-schemas
 uv run tool-abstention validate-record task path/to/task.json
+uv run tool-abstention audit-pairs data/raw/productivity/tasks.jsonl
 ```
 
 `make check` runs Ruff formatting and lint checks, strict mypy type checking,
@@ -69,6 +72,10 @@ foundation checks do not download model weights or require Apple Silicon.
 Canonical task, pair, prediction, and evaluation records are strict immutable
 Pydantic models. JSON Schema exports are deterministic and unknown record fields
 are rejected. Tool parameter schemas use JSON Schema Draft 2020-12.
+
+`make data` deterministically generates 40 productivity pairs (80 tasks) across
+`ANSWER`, `CLARIFY`, `REFUSE`, and `NOOP`. Generated data is ignored by Git and
+accompanied by a content-hashed manifest.
 
 ## Stack (planned)
 

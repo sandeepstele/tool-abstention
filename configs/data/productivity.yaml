@@ -1,0 +1,4 @@
+seed: 0
+pairs_per_class: 10
+generator_version: 1.0.0
+split: train

@@ -80,6 +80,9 @@ tool-abstention/
   pairing enums. `records.py` is the strict Pydantic source of truth for tool,
   task, pair, prediction, and evaluation artifacts; `schemas.py` exports their
   deterministic JSON Schemas and validates JSON records.
+- `src/tool_abstention/productivity.py` implements the first vertical slice: four
+  deterministic mock tools, seeded generation, semantic one-perturbation checks,
+  executable `CALL` verification, manifests, loading, and human-readable audits.
 - `taxonomy.py` is the **single source of truth** for the five classes (see `05-data-plan.md`). Everything else imports from it; no magic strings.
 - `tools.py` holds a registry of *mock* tool schemas (OpenAI function-calling JSON-Schema style) plus deterministic executors so a "tool call" can actually be *executed* for `should-act` tasks (keeps the harness honest).
 - `generate.py` produces **paired tasks**: each task has a `should-act` and a `should-abstain` variant via a controlled perturbation (mirroring AgentAbstain's paired design, but single-turn and rule-labeled).

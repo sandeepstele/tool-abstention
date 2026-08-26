@@ -4,9 +4,10 @@
 
 ## Status
 
-**Phase 1 — data pipeline: in progress.** Planning, repository foundation, and
-canonical record contracts are complete. Domain tools, paired generation, splits,
-and manifests are not yet implemented.
+**Phase 1 — data pipeline: in progress.** Planning, repository foundation,
+canonical contracts, and the 40-pair productivity development slice are complete.
+Finance/weather expansion, leakage-safe splits, and the full dataset manifest are
+not yet implemented.
 
 ---
 

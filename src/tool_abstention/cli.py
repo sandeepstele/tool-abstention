@@ -7,6 +7,11 @@ from typing import cast
 
 from tool_abstention import __version__
 from tool_abstention.config import ProjectConfig, load_yaml_config
+from tool_abstention.productivity import (
+    audit_pairs,
+    build_productivity_dataset,
+    load_pairs,
+)
 from tool_abstention.schemas import SchemaKind, export_schemas, validate_record
 
 
@@ -34,6 +39,17 @@ def build_parser() -> argparse.ArgumentParser:
     )
     record.add_argument("kind", choices=("task", "pair", "prediction", "evaluation"))
     record.add_argument("path", type=Path)
+
+    generate = subparsers.add_parser(
+        "generate-productivity", help="build the deterministic productivity slice"
+    )
+    generate.add_argument("--config", required=True, type=Path)
+    generate.add_argument("--output", required=True, type=Path)
+
+    audit = subparsers.add_parser(
+        "audit-pairs", help="print every pair for human inspection"
+    )
+    audit.add_argument("path", type=Path)
     return parser
 
 
@@ -54,6 +70,16 @@ def main(argv: Sequence[str] | None = None) -> None:
         if args.command == "validate-record":
             record = validate_record(args.path, cast("SchemaKind", args.kind))
             print(record.model_dump_json(indent=2))
+            return
+        if args.command == "generate-productivity":
+            manifest = build_productivity_dataset(args.config, args.output)
+            print(
+                f"generated {manifest['pair_count']} pairs / "
+                f"{manifest['task_count']} tasks in {args.output}"
+            )
+            return
+        if args.command == "audit-pairs":
+            print(audit_pairs(load_pairs(args.path)))
             return
     except (OSError, ValueError) as error:
         parser.exit(2, f"error: {error}\n")

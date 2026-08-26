@@ -5,6 +5,78 @@ machine-readable experiment logs and Git history. New entries are added in rever
 chronological order and follow the protocol in
 [`docs/11-implementation-plan.md`](docs/11-implementation-plan.md#5-documentation-protocol).
 
+## 2026-08-26 — Implement Milestone C productivity vertical slice
+
+### Objective
+
+Build the first executable dataset slice: 40 deterministic productivity pairs
+covering all four abstention transformations, with artifact hashing and a complete
+human-readable audit. Do not download or run a language model.
+
+### Changes
+
+- Added four Draft 2020-12 productivity tools and deterministic executors:
+  `search_contacts`, `create_event`, `close_ticket`, and `send_email`.
+- Added a strict seeded generator configuration and `make data` target.
+- Added ten pairs per abstention class, producing 40 pairs / 80 task records.
+- Added semantic pair-diff validation: query-only for `ANSWER`/`CLARIFY`,
+  tool-inventory-only for `REFUSE`, and environment-only for `NOOP`.
+- Made generation execute every `CALL` and compare the result with its declared
+  expected result before writing artifacts.
+- Added deterministic `tasks.jsonl` and `manifest.json` generation with config and
+  content hashes; timestamps and absolute paths are excluded from compute artifacts.
+- Added pair reconstruction, duplicate/incomplete-pair detection, and a complete
+  audit renderer.
+- Added `generate-productivity` and `audit-pairs` CLI commands.
+- Added 11 generator, executor, artifact, semantic-validation, and CLI tests.
+- Anchored generated-data ignore rules to the repository root so the checked-in
+  `configs/data/` directory is not accidentally ignored.
+
+### Decisions and rationale
+
+- **Four template families map one-to-one to abstention classes.** This makes the
+  controlled perturbation visible and testable before adding linguistic variety.
+- **Executors operate on deep copies.** Test fixtures and expected state cannot be
+  mutated by execution order.
+- **Manifests omit build time.** The same config and seed produce byte-identical
+  task and manifest artifacts.
+- **Development slice stays in the train split.** Final grouped splits belong to
+  the multi-domain expansion milestone and must not be implied by this audit set.
+
+### Commands and outcomes
+
+- Initial static checks requested Ruff formatting, import ordering, and line-length
+  changes; all were applied without weakening rules.
+- Strict mypy caught invariant `dict` value types and string-versus-enum test
+  inputs; explicit JSON-value and `DatasetSplit` types fixed them.
+- `make check` passed 78 tests with 99.27% coverage, clean Ruff, and strict mypy
+  across 21 source files before the final audit correction.
+- `make data` generated 40 pairs / 80 tasks locally using CPU only.
+- Printed and inspected all 40 pairs. Every pair showed exactly its declared
+  semantic dimension; the audit exposed doubled punctuation in all clarification
+  prompts, which was corrected and protected by a regression assertion.
+- The same audit revealed `configs/data/` was hidden by an unanchored ignore rule;
+  changed it to `/data/` so only generated root data is ignored.
+- Regenerated and re-audited the corrected dataset: all 40 pair headers were
+  present, clarification punctuation was clean, and the artifact hashes were
+  `f15950c3...e4c904` for `tasks.jsonl` and `78f967ce...f261c` for the manifest.
+- Definitive `git diff --check` and `make check` passed: 34 files formatted, Ruff
+  clean, strict mypy clean across 21 source files, and 78 tests passed with 99.27%
+  coverage.
+
+### Open issues
+
+- Templates are deliberately narrow and are not yet a general benchmark.
+- The development slice has no train/validation/test split and must not be used for
+  final reported metrics.
+- The audit verifies construction quality, not natural-language evaluator quality;
+  evaluator calibration remains Milestone D.
+
+### Next action
+
+Implement Milestone D: model-output parsing, class-specific deterministic judges,
+metrics, adversarial calibration records, and stored raw prediction evaluation.
+
 ## 2026-08-26 — Implement Milestone B taxonomy and record contracts
 
 ### Objective

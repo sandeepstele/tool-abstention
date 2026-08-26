@@ -19,8 +19,8 @@ build/
 *.key
 
 # Generated project artifacts
-data/
-checkpoints/
+/data/
+/checkpoints/
 results/**/*.png
 results/**/*.safetensors
 

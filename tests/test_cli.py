@@ -57,3 +57,27 @@ def test_validate_record_reports_useful_error(
     captured = capsys.readouterr()
     assert "error:" in captured.err
     assert "pair_id" in captured.err
+
+
+def test_generate_and_audit_productivity_commands(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    config_path = tmp_path / "productivity.yaml"
+    config_path.write_text(
+        "seed: 0\npairs_per_class: 1\ngenerator_version: 1.0.0\nsplit: train\n",
+        encoding="utf-8",
+    )
+    output = tmp_path / "output"
+    main(
+        [
+            "generate-productivity",
+            "--config",
+            str(config_path),
+            "--output",
+            str(output),
+        ]
+    )
+    assert "generated 4 pairs / 8 tasks" in capsys.readouterr().out
+    main(["audit-pairs", str(output / "tasks.jsonl")])
+    audit = capsys.readouterr().out
+    assert audit.count("PAIR productivity-") == 4
