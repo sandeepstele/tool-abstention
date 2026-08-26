@@ -43,9 +43,25 @@ future implementation and experiment session.
 
 ## Status
 
-**Phase 0 — research planning complete. Implementation planning complete; code not
-yet started.** See [`docs/08-roadmap.md`](docs/08-roadmap.md) and
+**Phase 0 — research planning complete. Milestone A repository foundation is
+implemented.** See [`docs/08-roadmap.md`](docs/08-roadmap.md) and
 [`docs/11-implementation-plan.md`](docs/11-implementation-plan.md).
+
+## Development setup
+
+The foundation targets Python 3.12 and uses
+[`uv`](https://docs.astral.sh/uv/) for locked dependency management:
+
+```bash
+make setup
+make check
+uv run python -m tool_abstention --help
+uv run tool-abstention validate-config configs/project.yaml
+```
+
+`make check` runs Ruff formatting and lint checks, strict mypy type checking,
+and the pytest suite with coverage. GitHub Actions runs the same CPU-only command;
+foundation checks do not download model weights or require Apple Silicon.
 
 ## Stack (planned)
 

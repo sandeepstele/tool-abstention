@@ -1,12 +1,9 @@
 """Strict typed configuration loading."""
 
 from pathlib import Path
-from typing import TypeVar
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field
-
-ConfigT = TypeVar("ConfigT", bound=BaseModel)
 
 
 class ProjectConfig(BaseModel):
@@ -19,7 +16,7 @@ class ProjectConfig(BaseModel):
     schema_version: int = Field(default=1, ge=1)
 
 
-def load_yaml_config(path: Path, model: type[ConfigT]) -> ConfigT:
+def load_yaml_config[ConfigT: BaseModel](path: Path, model: type[ConfigT]) -> ConfigT:
     """Load YAML from *path* and validate it with *model*."""
     with path.open(encoding="utf-8") as stream:
         value = yaml.safe_load(stream)
