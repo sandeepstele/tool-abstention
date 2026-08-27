@@ -21,8 +21,10 @@ def evaluate_files(
     prediction_by_id = {prediction.task_id: prediction for prediction in predictions}
     if len(prediction_by_id) != len(predictions):
         raise ValueError("prediction task ids must be unique")
-    if set(prediction_by_id) != {task.id for task in tasks}:
-        raise ValueError("prediction ids must match task ids exactly")
+    task_ids = {task.id for task in tasks}
+    if not set(prediction_by_id).issubset(task_ids):
+        raise ValueError("prediction ids must belong to the task file")
+    tasks = [task for task in tasks if task.id in prediction_by_id]
     evaluations: list[EvaluationRecord] = [
         evaluate_prediction(task, prediction_by_id[task.id]) for task in tasks
     ]

@@ -9,6 +9,10 @@ canonical contracts, executable tools, deterministic evaluation, grouped 60/20/2
 splits, test hashing, and the full manifest are implemented. The larger 600-pair
 roadmap target remains a pre-final-experiment expansion goal.
 
+**Phase 2 — baseline inference: in progress.** The pinned 0.5B MLX model completed
+an eight-task, four-class Metal smoke run with stored raw outputs and provenance.
+Full validation inference, 25-failure analysis, and human calibration remain open.
+
 ---
 
 ## Phase 0 — Planning & framing ✅

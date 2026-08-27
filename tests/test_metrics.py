@@ -113,6 +113,7 @@ def test_evaluate_files_rejects_prediction_id_problems(tmp_path: Path) -> None:
     )
     with pytest.raises(ValueError, match="must be unique"):
         evaluate_files(task_path, prediction_path, tmp_path / "output")
-    write_jsonl(prediction_path, [first.model_dump(mode="json")])
-    with pytest.raises(ValueError, match="must match task ids"):
+    foreign = first.model_copy(update={"task_id": "foreign-act"})
+    write_jsonl(prediction_path, [foreign.model_dump(mode="json")])
+    with pytest.raises(ValueError, match="must belong to the task file"):
         evaluate_files(task_path, prediction_path, tmp_path / "output")

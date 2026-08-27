@@ -9,6 +9,14 @@ from tool_abstention import __version__
 from tool_abstention.config import ProjectConfig, load_yaml_config
 from tool_abstention.dataset import build_full_dataset
 from tool_abstention.harness import evaluate_files
+from tool_abstention.inference import (
+    MlxBackend,
+    load_inference_config,
+    load_tasks,
+    run_inference,
+    select_stratified_smoke,
+    write_run_manifest,
+)
 from tool_abstention.productivity import (
     audit_pairs,
     build_productivity_dataset,
@@ -65,6 +73,13 @@ def build_parser() -> argparse.ArgumentParser:
     evaluate.add_argument("--tasks", required=True, type=Path)
     evaluate.add_argument("--predictions", required=True, type=Path)
     evaluate.add_argument("--output", required=True, type=Path)
+
+    infer = subparsers.add_parser("infer", help="run resumable local MLX inference")
+    infer.add_argument("--config", required=True, type=Path)
+    infer.add_argument("--tasks", required=True, type=Path)
+    infer.add_argument("--output", required=True, type=Path)
+    infer.add_argument("--limit", type=int, default=None)
+    infer.add_argument("--stratified-smoke", action="store_true")
     return parser
 
 
@@ -106,6 +121,20 @@ def main(argv: Sequence[str] | None = None) -> None:
         if args.command == "evaluate":
             metrics = evaluate_files(args.tasks, args.predictions, args.output)
             print(metrics.model_dump_json(indent=2))
+            return
+        if args.command == "infer":
+            inference_config = load_inference_config(args.config)
+            inference_tasks = load_tasks(args.tasks)
+            if args.stratified_smoke:
+                inference_tasks = select_stratified_smoke(inference_tasks)
+            predictions = run_inference(
+                inference_tasks,
+                MlxBackend(inference_config),
+                args.output,
+                limit=args.limit,
+            )
+            write_run_manifest(inference_config, inference_tasks, args.output)
+            print(f"stored {len(predictions)} predictions in {args.output}")
             return
     except (OSError, ValueError) as error:
         parser.exit(2, f"error: {error}\n")

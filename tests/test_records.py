@@ -346,6 +346,7 @@ def test_prediction_success_and_failure_states() -> None:
         {"latency_ms": -1},
         {"input_tokens": -1},
         {"latency_ms": math.inf},
+        {"peak_memory_gb": math.inf},
         {"inference_error": "failed", "raw_text": "partial"},
         {
             "inference_error": "failed",

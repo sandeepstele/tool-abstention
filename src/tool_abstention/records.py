@@ -303,13 +303,16 @@ class PredictionRecord(ContractModel):
     latency_ms: float = Field(ge=0)
     input_tokens: int | None = Field(default=None, ge=0)
     output_tokens: int | None = Field(default=None, ge=0)
+    peak_memory_gb: float | None = Field(default=None, ge=0)
     inference_error: NonEmptyText | None = None
 
-    @field_validator("latency_ms")
+    @field_validator("latency_ms", "peak_memory_gb")
     @classmethod
-    def finite_latency(cls, value: float) -> float:
+    def finite_latency(cls, value: float | None) -> float | None:
+        if value is None:
+            return value
         if not math.isfinite(value):
-            raise ValueError("latency must be finite")
+            raise ValueError("timing and memory values must be finite")
         return value
 
     @model_validator(mode="after")

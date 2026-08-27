@@ -29,6 +29,7 @@ dev = [
   "types-jsonschema>=4.23",
   "types-pyyaml>=6.0.12.20241230",
 ]
+inference = ["mlx-lm>=0.29,<0.30"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/tool_abstention"]

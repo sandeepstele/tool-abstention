@@ -43,10 +43,10 @@ future implementation and experiment session.
 
 ## Status
 
-**Phase 1 — v1 data pipeline complete at 300 pairs / 600 tasks.** Three executable
-domains, grouped 60/20/20 splits, frozen test hashing, manifests, and deterministic
-evaluation are implemented. The original 600-pair target remains an expansion goal.
-Baseline local model inference is next. See
+**Phase 2 — baseline inference in progress.** The v1 300-pair data pipeline is
+complete, and the pinned Qwen2.5-0.5B MLX smoke run has executed locally on Metal.
+The smoke result is intentionally retained: 0% strict accuracy and 75% abstention
+tool-hallucination over four stratified pairs. Full validation is next. See
 [`docs/08-roadmap.md`](docs/08-roadmap.md) and
 [`docs/11-implementation-plan.md`](docs/11-implementation-plan.md).
 
@@ -59,6 +59,7 @@ The foundation targets Python 3.12 and uses
 make setup
 make check
 make data
+make baseline-smoke
 uv run python -m tool_abstention --help
 uv run tool-abstention validate-config configs/project.yaml
 uv run tool-abstention export-schemas /tmp/tool-abstention-schemas
@@ -87,6 +88,11 @@ Stored predictions can be evaluated without rerunning inference. The evaluator
 parses plain/OpenAI/Qwen-style tool calls, validates class-specific behavior, and
 writes per-example judgments plus accuracy, paired accuracy, macro-F1, act and
 abstention accuracy, hallucination rate, and per-class metrics.
+
+The smoke model is pinned to
+`mlx-community/Qwen2.5-0.5B-Instruct-4bit@53a32aee5e9447773fd2b85988395066aef3700a`.
+MLX dependencies are isolated in the `inference` dependency group, and CPU-only CI
+does not import or download them.
 
 ## Stack (planned)
 

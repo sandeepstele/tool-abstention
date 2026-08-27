@@ -5,6 +5,70 @@ machine-readable experiment logs and Git history. New entries are added in rever
 chronological order and follow the protocol in
 [`docs/11-implementation-plan.md`](docs/11-implementation-plan.md#5-documentation-protocol).
 
+## 2026-08-26 — Begin Milestone F local Qwen baseline inference
+
+### Objective
+
+Install a separately locked MLX inference stack, implement resumable greedy
+inference, download a revision-pinned 0.5B Qwen model, and complete a representative
+eight-task Metal smoke run before spending compute on the validation split.
+
+### Changes
+
+- Added an `inference` dependency group pinned by `uv.lock`: MLX-LM 0.29.1, MLX
+  0.32.2, MLX Metal 0.32.2, and Transformers 5.16.1.
+- Pinned `mlx-community/Qwen2.5-0.5B-Instruct-4bit` at revision
+  `53a32aee5e9447773fd2b85988395066aef3700a` with greedy decoding and 256 tokens.
+- Added a lazy MLX backend, stable system/environment/tool prompt formatting,
+  durable per-record append, resume validation, persisted backend errors, token and
+  latency accounting, peak Metal memory, and deterministic run manifests.
+- Added stratified smoke selection: one complete pair for each abstention class.
+- Added `infer`, `baseline-smoke`, fake-backend tests, provenance tests, and partial
+  stored-prediction evaluation support.
+- Added optional peak-memory metadata to the prediction contract and updated its
+  fixed JSON Schema hash.
+
+### Attempts, failures, and fixes
+
+- Verified installed APIs before coding: `load(..., revision=...)` and
+  `generate(model, tokenizer, prompt=...)` are supported by MLX-LM 0.29.1.
+- Attempt 1 downloaded the approximately 290 MB model but all eight predictions
+  persisted `BatchEncoding` errors. Transformers 5 returned a `BatchEncoding` for
+  `tokenize=True`; changed the chat template to `tokenize=False` and passed text to
+  MLX-LM, matching its current documented path.
+- Attempt 2 ran successfully but selected only `ANSWER` pairs because validation is
+  class ordered. Added tested stratified pair selection rather than presenting the
+  sample as representative.
+- Attempt 3 completed the stratified run but predated run-manifest and peak-memory
+  capture. Added both and reran from a fresh output directory.
+- Diagnostic attempt directories were preserved during debugging, then moved out of
+  the repository before commit; their failure modes and fixes are recorded here.
+
+### Final smoke result
+
+- Eight tasks / four complete pairs; all four abstention classes represented.
+- Zero inference errors; mean latency 246.62 ms, median 243.20 ms, peak Metal memory
+  0.8591 GB; 5,711 input and 312 output tokens total.
+- Accuracy 0.0, paired accuracy 0.0, act accuracy 0.0, abstention accuracy 0.0,
+  macro-F1 0.1455, tool-hallucination rate 0.75.
+- Seven outputs attempted tools. Most emitted malformed double-braced Qwen tool JSON;
+  one abstention response asked for a ticket ID already visible in the request.
+- The pinned tokenizer exposes tool delimiters through its template but MLX-LM did
+  not infer a `tool_parser` for this older Qwen2 template. The raw malformed output
+  remains a failure; no brace-stripping heuristic was added to inflate the score.
+- Prediction hash `b7c77925...b444d9`; prompt-policy hash `9c461034...d4dcb`;
+  task-selection hash `fc9a0984...dd570`.
+
+### Verification and next action
+
+- Definitive CPU suite before the final run: 129 tests passed, Ruff clean, strict
+  mypy clean across 31 files, and 96.15% coverage.
+- The negative smoke result is reportable evidence that the infrastructure works and
+  the 0.5B model strongly over-calls/malforms tools under the current prompt.
+- Next: characterize the tokenizer-native tool parser and prompt schema on a tiny
+  diagnostic set, then run the full validation split only after deciding whether
+  malformed double braces are model behavior or a correctable template mismatch.
+
 ## 2026-08-26 — Implement Milestone E multi-domain dataset
 
 ### Objective

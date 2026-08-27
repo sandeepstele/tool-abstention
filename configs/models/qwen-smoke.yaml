@@ -1,0 +1,5 @@
+model: mlx-community/Qwen2.5-0.5B-Instruct-4bit
+revision: 53a32aee5e9447773fd2b85988395066aef3700a
+seed: 0
+max_tokens: 256
+temperature: 0.0
