@@ -83,6 +83,10 @@ tool-abstention/
 - `src/tool_abstention/productivity.py` implements the first vertical slice: four
   deterministic mock tools, seeded generation, semantic one-perturbation checks,
   executable `CALL` verification, manifests, loading, and human-readable audits.
+- `src/tool_abstention/domains.py` adds executable finance and weather/geo tools;
+  `dataset.py` assembles the 300-pair corpus, groups template families into
+  deterministic 60/20/20 splits, rejects leakage, and writes the frozen test hash,
+  dataset card, and provenance manifest.
 - `taxonomy.py` is the **single source of truth** for the five classes (see `05-data-plan.md`). Everything else imports from it; no magic strings.
 - `tools.py` holds a registry of *mock* tool schemas (OpenAI function-calling JSON-Schema style) plus deterministic executors so a "tool call" can actually be *executed* for `should-act` tasks (keeps the harness honest).
 - `generate.py` produces **paired tasks**: each task has a `should-act` and a `should-abstain` variant via a controlled perturbation (mirroring AgentAbstain's paired design, but single-turn and rule-labeled).

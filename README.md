@@ -43,9 +43,10 @@ future implementation and experiment session.
 
 ## Status
 
-**Phase 1 — data pipeline in progress. Repository foundation, canonical contracts,
-a 40-pair productivity slice, and deterministic evaluation are implemented. Domain
-expansion and leakage-safe splits remain before baseline model inference.** See
+**Phase 1 — v1 data pipeline complete at 300 pairs / 600 tasks.** Three executable
+domains, grouped 60/20/20 splits, frozen test hashing, manifests, and deterministic
+evaluation are implemented. The original 600-pair target remains an expansion goal.
+Baseline local model inference is next. See
 [`docs/08-roadmap.md`](docs/08-roadmap.md) and
 [`docs/11-implementation-plan.md`](docs/11-implementation-plan.md).
 
@@ -77,9 +78,10 @@ Canonical task, pair, prediction, and evaluation records are strict immutable
 Pydantic models. JSON Schema exports are deterministic and unknown record fields
 are rejected. Tool parameter schemas use JSON Schema Draft 2020-12.
 
-`make data` deterministically generates 40 productivity pairs (80 tasks) across
-`ANSWER`, `CLARIFY`, `REFUSE`, and `NOOP`. Generated data is ignored by Git and
-accompanied by a content-hashed manifest.
+`make data` deterministically generates 300 pairs / 600 tasks across productivity,
+finance, and weather/geo. Every domain contains all four abstention classes, and
+template families remain isolated within train, validation, or test. Generated data
+is ignored by Git and accompanied by a content-hashed manifest and dataset card.
 
 Stored predictions can be evaluated without rerunning inference. The evaluator
 parses plain/OpenAI/Qwen-style tool calls, validates class-specific behavior, and

@@ -7,6 +7,7 @@ from typing import cast
 
 from tool_abstention import __version__
 from tool_abstention.config import ProjectConfig, load_yaml_config
+from tool_abstention.dataset import build_full_dataset
 from tool_abstention.harness import evaluate_files
 from tool_abstention.productivity import (
     audit_pairs,
@@ -47,6 +48,12 @@ def build_parser() -> argparse.ArgumentParser:
     generate.add_argument("--config", required=True, type=Path)
     generate.add_argument("--output", required=True, type=Path)
 
+    full = subparsers.add_parser(
+        "generate-dataset", help="build the complete multi-domain dataset"
+    )
+    full.add_argument("--config", required=True, type=Path)
+    full.add_argument("--output", required=True, type=Path)
+
     audit = subparsers.add_parser(
         "audit-pairs", help="print every pair for human inspection"
     )
@@ -81,6 +88,13 @@ def main(argv: Sequence[str] | None = None) -> None:
             return
         if args.command == "generate-productivity":
             manifest = build_productivity_dataset(args.config, args.output)
+            print(
+                f"generated {manifest['pair_count']} pairs / "
+                f"{manifest['task_count']} tasks in {args.output}"
+            )
+            return
+        if args.command == "generate-dataset":
+            manifest = build_full_dataset(args.config, args.output)
             print(
                 f"generated {manifest['pair_count']} pairs / "
                 f"{manifest['task_count']} tasks in {args.output}"

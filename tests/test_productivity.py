@@ -171,11 +171,11 @@ def test_load_rejects_duplicate_and_incomplete_pairs(tmp_path: Path) -> None:
 
 
 def test_config_rejects_more_entities_than_available() -> None:
-    assert len(CONTACTS) == 10
+    assert len(CONTACTS) == 25
     with pytest.raises(ValidationError):
         ProductivityConfig(
             seed=0,
-            pairs_per_class=11,
+            pairs_per_class=26,
             generator_version="1.0.0",
             split=DatasetSplit.TRAIN,
         )

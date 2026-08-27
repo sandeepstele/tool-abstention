@@ -5,6 +5,53 @@ machine-readable experiment logs and Git history. New entries are added in rever
 chronological order and follow the protocol in
 [`docs/11-implementation-plan.md`](docs/11-implementation-plan.md#5-documentation-protocol).
 
+## 2026-08-26 — Implement Milestone E multi-domain dataset
+
+### Objective
+
+Expand the executable corpus to finance and weather/geo, reach 300 paired tasks,
+create leakage-safe deterministic splits, and freeze test identity before inference.
+
+### Changes and decisions
+
+- Expanded productivity to 25 examples per abstention class and added 25 finance
+  and 25 weather/geo examples per class: 300 pairs / 600 tasks total.
+- Added four tools per new domain and deterministic execution for every generated
+  `CALL` expectation.
+- Added template-family grouping with exact 60/20/20 pair splits, normalized-query
+  leakage rejection, duplicate-pair rejection, and test-set hashing.
+- Added deterministic train/validation/test JSONL, a dataset card, and a provenance
+  manifest with artifact hashes and class/domain distributions.
+- Changed `make data` to build the complete corpus and added the
+  `generate-dataset` CLI command.
+- Kept generated artifacts ignored; only source/configuration is committed.
+- Marked the 300-pair v1 pipeline complete while retaining the original 600-pair
+  roadmap target as an explicit later expansion rather than overstating progress.
+
+### Commands, failures, and verification
+
+- Ruff formatted the new domain modules; strict mypy identified invariant JSON
+  container types, which were corrected with explicit `JsonValue` annotations.
+- The first full build stopped on normalized-query leakage because finance FX
+  prompts were repeated across splits. Added deterministic unique currency pairs;
+  the unchanged leakage guard then passed.
+- The first regression run exposed an outdated 10-contact test and missing new-code
+  coverage. Updated the capacity check and added multi-domain, executor, split,
+  leakage, determinism, manifest, and dataset-card tests.
+- Definitive `make check`: 42 files formatted, Ruff clean, strict mypy clean across
+  29 source files, 120 tests passed, 98.79% coverage.
+- Generated counts: train 360 tasks, validation 120, test 120.
+- Hashes: train `df308fe4...da2b9`, validation `563b28c9...790c8`, frozen test
+  `76bbac17...59bc8`, manifest `62a6797f...3311c`.
+
+### Open issues and next action
+
+- The corpus remains synthetic and template-generated; real-model failure analysis
+  must guide any further expansion.
+- Human calibration of 200 real outputs remains required.
+- Next: baseline inference adapter, pinned small Qwen model, greedy local inference,
+  raw prediction persistence, evaluator replay, and 200-output human calibration.
+
 ## 2026-08-26 — Implement Milestone D deterministic evaluator
 
 ### Objective

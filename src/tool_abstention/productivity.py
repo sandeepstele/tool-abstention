@@ -44,7 +44,7 @@ class ProductivityConfig(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     seed: int = Field(ge=0, le=2**32 - 1)
-    pairs_per_class: int = Field(default=10, ge=1, le=10)
+    pairs_per_class: int = Field(default=25, ge=1, le=25)
     generator_version: Annotated[str, Field(pattern=r"^\d+\.\d+\.\d+$")]
     split: DatasetSplit = DatasetSplit.TRAIN
 
@@ -60,6 +60,21 @@ CONTACTS: tuple[tuple[str, str], ...] = (
     ("Hugo Silva", "hugo.silva@example.com"),
     ("Iris Chen", "iris.chen@example.com"),
     ("Jon Bell", "jon.bell@example.com"),
+    ("Kira Young", "kira.young@example.com"),
+    ("Leo Adams", "leo.adams@example.com"),
+    ("Maya Singh", "maya.singh@example.com"),
+    ("Noah Kim", "noah.kim@example.com"),
+    ("Olivia Cruz", "olivia.cruz@example.com"),
+    ("Pavel Novak", "pavel.novak@example.com"),
+    ("Quinn Baker", "quinn.baker@example.com"),
+    ("Rina Sato", "rina.sato@example.com"),
+    ("Sam Wilson", "sam.wilson@example.com"),
+    ("Tara Gupta", "tara.gupta@example.com"),
+    ("Uma Shah", "uma.shah@example.com"),
+    ("Victor Ng", "victor.ng@example.com"),
+    ("Willa Jones", "willa.jones@example.com"),
+    ("Xavier Reed", "xavier.reed@example.com"),
+    ("Yara Haddad", "yara.haddad@example.com"),
 )
 MESSAGES: tuple[str, ...] = (
     "The review is ready.",
@@ -72,6 +87,21 @@ MESSAGES: tuple[str, ...] = (
     "The deployment completed.",
     "Your access was restored.",
     "The invoice is ready.",
+    "The agenda is attached.",
+    "Please review the proposal.",
+    "The ticket was resolved.",
+    "Your request was received.",
+    "The migration starts tonight.",
+    "Please approve the budget.",
+    "The interview is confirmed.",
+    "The dashboard is refreshed.",
+    "Your package has shipped.",
+    "The contract is signed.",
+    "Please update the checklist.",
+    "The backup completed.",
+    "Your reservation is confirmed.",
+    "The workshop is postponed.",
+    "Please read the incident report.",
 )
 
 

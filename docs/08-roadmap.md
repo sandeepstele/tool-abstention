@@ -4,10 +4,10 @@
 
 ## Status
 
-**Phase 1 — data pipeline: in progress.** Planning, repository foundation,
-canonical contracts, the 40-pair productivity development slice, and deterministic
-stored-prediction evaluation are complete. Finance/weather expansion, leakage-safe
-splits, and the full dataset manifest are not yet implemented.
+**Phase 1 — v1 data pipeline: ✅ complete at 300 pairs / 600 tasks.** Three domains,
+canonical contracts, executable tools, deterministic evaluation, grouped 60/20/20
+splits, test hashing, and the full manifest are implemented. The larger 600-pair
+roadmap target remains a pre-final-experiment expansion goal.
 
 ---
 

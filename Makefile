@@ -4,9 +4,9 @@ setup:
 	uv sync --locked
 
 data:
-	uv run tool-abstention generate-productivity \
-		--config configs/data/productivity.yaml \
-		--output data/raw/productivity
+	uv run tool-abstention generate-dataset \
+		--config configs/data/full.yaml \
+		--output data/processed
 
 lint:
 	uv run ruff format --check .
