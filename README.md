@@ -39,6 +39,7 @@ All planning lives in [`docs/`](docs/). Read in order:
 | 12 | [baseline-diagnostics.md](docs/12-baseline-diagnostics.md) | Local model and evaluator calibration evidence |
 | 13 | [external-data.md](docs/13-external-data.md) | BFCL provenance, leakage controls, and baseline results |
 | 14 | [sft-baseline.md](docs/14-sft-baseline.md) | SFT training evidence, results, and failure analysis |
+| 15 | [malformed-call-analysis.md](docs/15-malformed-call-analysis.md) | BFCL protocol regression taxonomy and diagnosis |
 
 Engineering activity and decisions are recorded in [`WORKLOG.md`](WORKLOG.md). The
 logging convention is defined in the implementation plan and applies to every

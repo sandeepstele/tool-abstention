@@ -1,5 +1,6 @@
 """Pinned external benchmark ingestion, leakage checks, and decision evaluation."""
 
+import json
 import re
 from collections import Counter
 from difflib import SequenceMatcher
@@ -26,6 +27,9 @@ BFCL_FILES = {
     "BFCL_v3_simple.json": "CALL",
     "BFCL_v3_irrelevance.json": "ABSTAIN",
 }
+EXTERNAL_TOOL_BLOCK = re.compile(
+    r"<tool_call>\s*(.*?)\s*</tool_call>", re.DOTALL | re.IGNORECASE
+)
 
 
 def _file_inventory(root: Path) -> list[dict[str, str]]:
@@ -140,7 +144,7 @@ class ExternalEvaluation(BaseModel):
 class ExternalMetrics(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    evaluator_version: Literal["1.0.0"] = "1.0.0"
+    evaluator_version: Literal["1.1.0"] = "1.1.0"
     task_count: int = Field(gt=0)
     decision_accuracy: float = Field(ge=0, le=1)
     call_accuracy: float = Field(ge=0, le=1)
@@ -342,6 +346,32 @@ def external_query(record: ExternalDecisionRecord) -> str:
     )
 
 
+def valid_external_tool_call(raw_text: str) -> bool:
+    """Validate call syntax without imposing internal lowercase ID restrictions."""
+    text = raw_text.strip()
+    match = EXTERNAL_TOOL_BLOCK.fullmatch(text)
+    if match:
+        text = match.group(1)
+    if not text.startswith("{"):
+        return False
+    try:
+        payload = json.loads(text)
+    except json.JSONDecodeError:
+        return False
+    if not isinstance(payload, dict):
+        return False
+    if "function" in payload and isinstance(payload["function"], dict):
+        payload = payload["function"]
+    name = payload.get("name")
+    arguments = payload.get("arguments")
+    if isinstance(arguments, str):
+        try:
+            arguments = json.loads(arguments)
+        except json.JSONDecodeError:
+            return False
+    return isinstance(name, str) and bool(name.strip()) and isinstance(arguments, dict)
+
+
 def quarantine_leakage(
     records: list[ExternalDecisionRecord], internal_tasks: list[TaskRecord]
 ) -> tuple[list[ExternalDecisionRecord], list[dict[str, Any]]]:
@@ -521,10 +551,17 @@ def evaluate_external_records(
             )
             continue
         parsed = prediction.tool_call or parse_tool_call_text(prediction.raw_text)
-        attempted = parsed is not None or looks_like_tool_call(prediction.raw_text)
+        external_protocol = valid_external_tool_call(prediction.raw_text)
+        attempted = (
+            parsed is not None
+            or external_protocol
+            or looks_like_tool_call(prediction.raw_text)
+        )
         predicted = ExternalDecision.CALL if attempted else ExternalDecision.ABSTAIN
         protocol = (
-            parsed is not None if attempted else bool(prediction.raw_text.strip())
+            (parsed is not None or external_protocol)
+            if attempted
+            else bool(prediction.raw_text.strip())
         )
         evaluations.append(
             ExternalEvaluation(

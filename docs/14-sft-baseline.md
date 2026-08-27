@@ -51,12 +51,14 @@ three-epoch run was interrupted and is not represented as complete.
 | BFCL CALL accuracy | 99.25% | 99.25% | 0.00 |
 | BFCL ABSTAIN accuracy | 70.42% | 84.17% | +13.75 |
 | BFCL balanced accuracy | 84.83% | 91.71% | +6.88 |
-| BFCL malformed-call rate | 3.91% | 11.56% | +7.65 |
+| BFCL malformed-call rate | 1.72% | 9.69% | +7.97 |
 
 The result supports the core SFT premise for seed 0 and generalizes beyond the
 synthetic templates. It also reveals a protocol regression: SFT preserves the CALL
-decision rate but increases malformed tool-call syntax. This must be analyzed and
-addressed without changing the frozen evaluator before preference training.
+decision rate but increases malformed tool-call syntax. External evaluator 1.1.0
+correctly permits native BFCL names containing uppercase letters and dots; the
+remaining regression and its deterministic taxonomy are documented in
+[`15-malformed-call-analysis.md`](15-malformed-call-analysis.md).
 
 The internal held-out test split remains untouched. Seeds 1 and 2 are required
 before reporting uncertainty or treating SFT as a finalized multi-seed baseline.

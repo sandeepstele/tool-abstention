@@ -30,7 +30,7 @@
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-124"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-125"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-126"}
-{"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":false,"reason_code":"correct_decision","task_id":"bfcl-simple-127"}
+{"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-127"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-128"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-129"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-13"}
@@ -38,7 +38,7 @@
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-131"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-132"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-133"}
-{"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":false,"reason_code":"correct_decision","task_id":"bfcl-simple-134"}
+{"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-134"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-135"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-136"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-137"}
@@ -130,7 +130,7 @@
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-214"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-215"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-216"}
-{"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":false,"reason_code":"correct_decision","task_id":"bfcl-simple-217"}
+{"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-217"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-218"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-219"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-22"}
@@ -147,17 +147,17 @@
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-23"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-230"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-231"}
-{"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":false,"reason_code":"correct_decision","task_id":"bfcl-simple-232"}
+{"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-232"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-233"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-234"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-235"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-236"}
-{"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":false,"reason_code":"correct_decision","task_id":"bfcl-simple-237"}
+{"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-237"}
 {"correct":false,"expected_decision":"CALL","predicted_decision":"ABSTAIN","protocol_correct":true,"reason_code":"incorrect_decision","task_id":"bfcl-simple-238"}
-{"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":false,"reason_code":"correct_decision","task_id":"bfcl-simple-239"}
+{"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-239"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-24"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-240"}
-{"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":false,"reason_code":"correct_decision","task_id":"bfcl-simple-241"}
+{"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-241"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":false,"reason_code":"correct_decision","task_id":"bfcl-simple-242"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-243"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-244"}
@@ -218,7 +218,7 @@
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-294"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-295"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-296"}
-{"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":false,"reason_code":"correct_decision","task_id":"bfcl-simple-297"}
+{"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-297"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-298"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-299"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-3"}
@@ -227,7 +227,7 @@
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-301"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-302"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-303"}
-{"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":false,"reason_code":"correct_decision","task_id":"bfcl-simple-304"}
+{"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-304"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-305"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-306"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-307"}
@@ -280,7 +280,7 @@
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-35"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-350"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-351"}
-{"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":false,"reason_code":"correct_decision","task_id":"bfcl-simple-352"}
+{"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-352"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-353"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-354"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-355"}
@@ -347,7 +347,7 @@
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-50"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-51"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-52"}
-{"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":false,"reason_code":"correct_decision","task_id":"bfcl-simple-53"}
+{"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-53"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-54"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-55"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-56"}
@@ -367,7 +367,7 @@
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-69"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-7"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-70"}
-{"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":false,"reason_code":"correct_decision","task_id":"bfcl-simple-71"}
+{"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-71"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-72"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-73"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-74"}
@@ -385,7 +385,7 @@
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-85"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-86"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-87"}
-{"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":false,"reason_code":"correct_decision","task_id":"bfcl-simple-88"}
+{"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-88"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-89"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-9"}
 {"correct":true,"expected_decision":"CALL","predicted_decision":"CALL","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-simple-90"}
@@ -595,7 +595,7 @@
 {"correct":true,"expected_decision":"ABSTAIN","predicted_decision":"ABSTAIN","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-irrelevance-58"}
 {"correct":true,"expected_decision":"ABSTAIN","predicted_decision":"ABSTAIN","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-irrelevance-59"}
 {"correct":true,"expected_decision":"ABSTAIN","predicted_decision":"ABSTAIN","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-irrelevance-6"}
-{"correct":false,"expected_decision":"ABSTAIN","predicted_decision":"CALL","protocol_correct":false,"reason_code":"incorrect_decision","task_id":"bfcl-irrelevance-60"}
+{"correct":false,"expected_decision":"ABSTAIN","predicted_decision":"CALL","protocol_correct":true,"reason_code":"incorrect_decision","task_id":"bfcl-irrelevance-60"}
 {"correct":true,"expected_decision":"ABSTAIN","predicted_decision":"ABSTAIN","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-irrelevance-61"}
 {"correct":true,"expected_decision":"ABSTAIN","predicted_decision":"ABSTAIN","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-irrelevance-62"}
 {"correct":true,"expected_decision":"ABSTAIN","predicted_decision":"ABSTAIN","protocol_correct":true,"reason_code":"correct_decision","task_id":"bfcl-irrelevance-63"}

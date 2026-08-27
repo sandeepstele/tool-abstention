@@ -23,6 +23,7 @@ from tool_abstention.external import (
     parse_bfcl_file,
     prepare_external,
     quarantine_leakage,
+    valid_external_tool_call,
 )
 from tool_abstention.records import PredictionRecord
 from tool_abstention.taxonomy import DatasetSplit
@@ -267,6 +268,22 @@ def test_external_evaluation_covers_calls_abstention_and_malformed() -> None:
     assert evaluations[0].correct
     assert not evaluations[0].protocol_correct
     assert metrics.malformed_call_rate == 0.5
+
+
+def test_external_protocol_accepts_native_bfcl_function_names() -> None:
+    assert valid_external_tool_call(
+        '<tool_call>{"name":"calculate_NPV","arguments":{}}</tool_call>'
+    )
+    assert valid_external_tool_call(
+        '<tool_call>{"name":"fMRI.analyze","arguments":{}}</tool_call>'
+    )
+    assert valid_external_tool_call(
+        '{"function":{"name":"Mixed.Name","arguments":"{}"}}'
+    )
+    assert not valid_external_tool_call('<tool_call>{"name":</tool_call>')
+    assert not valid_external_tool_call("normal prose")
+    assert not valid_external_tool_call("[]")
+    assert not valid_external_tool_call('{"name":"x","arguments":"bad"}')
 
 
 def test_external_evaluation_rejects_ids_and_single_class() -> None:

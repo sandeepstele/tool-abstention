@@ -801,3 +801,37 @@ and AgentAbstain external evaluation partitions out of training.
 - After adapter-aware manifest hashing and its fixture regression test, the final
   gate passed with all 157 tests and 95.02% aggregate coverage; Ruff and strict
   mypy remained clean.
+
+## 2026-08-27 — BFCL malformed-call analysis
+
+### Evaluator audit and correction
+
+- Analyzed stored base and SFT predictions without running either model.
+- Found the external evaluator reused the internal lowercase-slug parsed-call
+  contract. Valid native BFCL names such as `calculate_NPV` and `fMRI.analyze`
+  were therefore falsely marked protocol-invalid.
+- Added a separate external JSON protocol validator that permits non-empty native
+  function names while retaining strict object/arguments structure. Versioned the
+  corrected external metric policy as 1.1.0 and added regression fixtures.
+- Replayed both stored runs. CALL/ABSTAIN decision metrics did not change. Base
+  malformed rate corrected from 3.91% to 1.72% (11/640); SFT corrected from 11.56%
+  to 9.69% (62/640).
+
+### Deterministic failure taxonomy
+
+- Added `analyze-malformed`, a canonical stored-prediction comparison with source
+  hashes, mutually exclusive categories, and new/resolved/persistent task IDs.
+- Base failures: 4 max-token truncations and 7 prose/wrapper violations.
+- SFT failures: 49 truncated JSON structures, 7 other JSON syntax errors, 3
+  max-token truncations, 2 prose/wrapper violations, and 1 invalid literal.
+- SFT introduced 61 malformed task IDs, resolved 10 base failures, and retained one
+  persistent failure.
+- Manual inspection of the dominant category shows schema fields copied into
+  `arguments`, the function name nested inside that object, and a missing root
+  closing brace. Only 3/62 failures reached the token limit, so increasing
+  `max_tokens` is not the primary fix.
+- Decision: do not relax the parser to accept structurally invalid JSON. Freeze the
+  seed-0 training/evaluation recipe, run seeds 1 and 2, then test protocol-focused
+  interventions as explicit ablations without training on BFCL.
+- Final gate passed: Ruff clean, strict mypy clean over 40 source files, and all
+  170 tests passed with 95.05% aggregate coverage.

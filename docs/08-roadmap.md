@@ -16,7 +16,9 @@ adjudications. Raw outputs, manifests, metrics, and limitations are retained.
 
 The first corrected one-epoch SFT adapter reached 95.83% internal validation
 accuracy and 91.71% BFCL balanced accuracy. **Next gate:** repeat SFT with seeds 1
-and 2, analyze malformed external calls, then freeze the SFT comparison before DPO.
+and 2 using the frozen recipe, then compare protocol regressions before DPO. The
+seed-0 malformed analysis found 49/62 failures were structurally truncated JSON,
+not max-token truncation.
 Public benchmark records remain evaluation-only, and the held-out test stays sealed.
 
 ---

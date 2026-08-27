@@ -66,7 +66,7 @@ The complete non-overlapping set ran locally on Metal using
 | ABSTAIN accuracy | 70.42% |
 | Balanced accuracy | 84.83% |
 | Tool-call rate | 73.12% |
-| Malformed-call rate | 3.91% |
+| Malformed-call rate | 1.72% |
 
 The predictions hash is
 `c2085f581f3936424977d02331f0ef5df60eb8ce4969305beb0928db0a28d222`.
@@ -78,3 +78,6 @@ raw output are retained per record.
 
 AgentAbstain is not run here. Its multi-turn sandbox and judge are intentionally
 outside this deterministic single-turn milestone.
+
+The malformed rate was corrected by external evaluator 1.1.0 after separating
+native BFCL function-name syntax from the internal lowercase stable-ID contract.

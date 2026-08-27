@@ -35,6 +35,7 @@ from tool_abstention.inference import (
     select_stratified_smoke,
     write_run_manifest,
 )
+from tool_abstention.malformed import analyze_malformed_calls
 from tool_abstention.productivity import (
     audit_pairs,
     build_productivity_dataset,
@@ -171,6 +172,13 @@ def build_parser() -> argparse.ArgumentParser:
     external_eval.add_argument("--records", required=True, type=Path)
     external_eval.add_argument("--predictions", required=True, type=Path)
     external_eval.add_argument("--output", required=True, type=Path)
+
+    malformed = subparsers.add_parser(
+        "analyze-malformed", help="compare stored malformed external call attempts"
+    )
+    malformed.add_argument("--base", required=True, type=Path)
+    malformed.add_argument("--sft", required=True, type=Path)
+    malformed.add_argument("--output", required=True, type=Path)
 
     infer = subparsers.add_parser("infer", help="run resumable local MLX inference")
     infer.add_argument("--config", required=True, type=Path)
@@ -364,6 +372,10 @@ def main(argv: Sequence[str] | None = None) -> None:
                 canonical_json_bytes(external_metrics.model_dump(mode="json")) + b"\n"
             )
             print(external_metrics.model_dump_json(indent=2))
+            return
+        if args.command == "analyze-malformed":
+            report = analyze_malformed_calls(args.base, args.sft, args.output)
+            print(json.dumps(report, indent=2))
             return
         if args.command == "infer":
             inference_config = load_inference_config(args.config)
