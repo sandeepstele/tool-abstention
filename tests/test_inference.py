@@ -6,11 +6,13 @@ import pytest
 
 from tool_abstention.inference import (
     InferenceConfig,
+    PromptExample,
     PromptVariant,
     load_inference_config,
     load_tasks,
     prompt_policy,
     run_inference,
+    run_prompt_inference,
     select_stratified_smoke,
     task_messages,
     write_run_manifest,
@@ -35,6 +37,18 @@ class FakeBackend:
         return PredictionRecord(
             task_id=task.id,
             raw_text="synthetic answer",
+            latency_ms=2,
+            input_tokens=10,
+            output_tokens=2,
+        )
+
+    def predict_prompt(self, example: PromptExample) -> PredictionRecord:
+        self.calls.append(example.id)
+        if self.fail:
+            raise RuntimeError("synthetic backend failure")
+        return PredictionRecord(
+            task_id=example.id,
+            raw_text="external answer",
             latency_ms=2,
             input_tokens=10,
             output_tokens=2,
@@ -88,6 +102,37 @@ def test_backend_failure_is_persisted(tmp_path: Path) -> None:
         [task], FakeBackend(fail=True), tmp_path / "predictions.jsonl"
     )
     assert predictions[0].inference_error == "RuntimeError: synthetic backend failure"
+
+
+def test_prompt_inference_resumes_and_persists_failures(tmp_path: Path) -> None:
+    examples = [
+        PromptExample(
+            id=f"external-{index}",
+            messages=({"role": "user", "content": "hello"},),
+            tools=(
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "lookup",
+                        "description": "lookup",
+                        "parameters": {"type": "object"},
+                    },
+                },
+            ),
+        )
+        for index in (1, 2)
+    ]
+    output = tmp_path / "external.jsonl"
+    first = FakeBackend()
+    run_prompt_inference(examples, first, output, limit=1)
+    assert first.calls == ["external-1"]
+    resumed = FakeBackend()
+    predictions = run_prompt_inference(examples, resumed, output)
+    assert resumed.calls == ["external-2"]
+    assert len(predictions) == 2
+    failed_output = tmp_path / "failed.jsonl"
+    failed = run_prompt_inference(examples[:1], FakeBackend(fail=True), failed_output)
+    assert failed[0].inference_error == "RuntimeError: synthetic backend failure"
 
 
 def test_resume_rejects_duplicate_and_foreign_ids(tmp_path: Path) -> None:

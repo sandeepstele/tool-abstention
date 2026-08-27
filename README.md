@@ -36,6 +36,8 @@ All planning lives in [`docs/`](docs/). Read in order:
 | 09 | [experiment-tracking.md](docs/09-experiment-tracking.md) | Reproducibility, configs, logging |
 | 10 | [paper-plan.md](docs/10-paper-plan.md) | Research contribution + target venue |
 | 11 | [implementation-plan.md](docs/11-implementation-plan.md) | Build order, interfaces, verification, deliverables |
+| 12 | [baseline-diagnostics.md](docs/12-baseline-diagnostics.md) | Local model and evaluator calibration evidence |
+| 13 | [external-data.md](docs/13-external-data.md) | BFCL provenance, leakage controls, and baseline results |
 
 Engineering activity and decisions are recorded in [`WORKLOG.md`](WORKLOG.md). The
 logging convention is defined in the implementation plan and applies to every
@@ -43,7 +45,7 @@ future implementation and experiment session.
 
 ## Status
 
-**Phase 2 — baseline inference in progress.** The v1 300-pair data pipeline is
+**Phase 2 — baseline inference and external validation complete.** The v1 300-pair data pipeline is
 complete. Controlled 0.5B prompt diagnostics and a pinned 1.5B capacity diagnostic
 have executed locally on Metal. The frozen 1.5B `native-full` baseline scored
 62.5% calibrated accuracy, 83.33% act accuracy, 41.67% abstention accuracy, and
@@ -51,6 +53,7 @@ have executed locally on Metal. The frozen 1.5B `native-full` baseline scored
 with all 60 owner-verified adjudications across behavior, semantics, and protocol
 validity. Held-out test data remains untouched. See
 [`docs/12-baseline-diagnostics.md`](docs/12-baseline-diagnostics.md),
+[`docs/13-external-data.md`](docs/13-external-data.md),
 [`docs/08-roadmap.md`](docs/08-roadmap.md) and
 [`docs/11-implementation-plan.md`](docs/11-implementation-plan.md).
 
@@ -67,6 +70,9 @@ make baseline-smoke
 make prompt-diagnostic
 make capacity-diagnostic
 make baseline-validation
+make external-fetch       # networked, one-time pinned snapshots
+make external-prepare     # network-free normalization and leakage audit
+make external-baseline    # local Metal inference + stored evaluation
 uv run python -m tool_abstention --help
 uv run tool-abstention validate-config configs/project.yaml
 uv run tool-abstention export-schemas /tmp/tool-abstention-schemas
@@ -116,6 +122,13 @@ The capacity diagnostic pins
 `mlx-community/Qwen2.5-1.5B-Instruct-4bit@8b403126fc14f14cfc99bb4cfa72ecbc129ea677`.
 MLX dependencies are isolated in the `inference` dependency group, and CPU-only CI
 does not import or download them.
+
+Public benchmark records are external evaluation only and never enter SFT data.
+The pinned BFCL slice contains 400 CALL and 240 ABSTAIN records; preparation found
+no overlap with internal train, validation, or test queries. The 1.5B native-full
+baseline scored 88.44% decision accuracy and 84.83% balanced accuracy. AgentAbstain
+is retained in its native multi-turn layout and cataloged as 263 pairs across 42
+environments; it is not converted or executed by the single-turn harness.
 
 ## Stack (planned)
 

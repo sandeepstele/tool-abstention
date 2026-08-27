@@ -733,6 +733,9 @@ dev = [
     { name = "types-jsonschema" },
     { name = "types-pyyaml" },
 ]
+external-data = [
+    { name = "huggingface-hub" },
+]
 inference = [
     { name = "mlx-lm" },
 ]
@@ -754,6 +757,7 @@ dev = [
     { name = "types-jsonschema", specifier = ">=4.23" },
     { name = "types-pyyaml", specifier = ">=6.0.12.20241230" },
 ]
+external-data = [{ name = "huggingface-hub", specifier = ">=1.0,<2" }]
 inference = [{ name = "mlx-lm", specifier = ">=0.29,<0.30" }]
 
 [[package]]

@@ -16,13 +16,22 @@ from tool_abstention.calibration import (
 )
 from tool_abstention.config import ProjectConfig, load_yaml_config
 from tool_abstention.dataset import build_full_dataset
+from tool_abstention.external import (
+    ExternalDecisionRecord,
+    evaluate_external_records,
+    fetch_external,
+    prepare_external,
+)
 from tool_abstention.harness import evaluate_files
 from tool_abstention.inference import (
+    SYSTEM_PROMPT,
     MlxBackend,
+    PromptExample,
     PromptVariant,
     load_inference_config,
     load_tasks,
     run_inference,
+    run_prompt_inference,
     select_stratified_smoke,
     write_run_manifest,
 )
@@ -33,7 +42,12 @@ from tool_abstention.productivity import (
 )
 from tool_abstention.records import EvaluationRecord, PredictionRecord
 from tool_abstention.schemas import SchemaKind, export_schemas, validate_record
-from tool_abstention.util.jsonl import read_jsonl
+from tool_abstention.util.hashing import (
+    canonical_json_bytes,
+    sha256_file,
+    sha256_object,
+)
+from tool_abstention.util.jsonl import read_jsonl, write_jsonl
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -72,6 +86,20 @@ def build_parser() -> argparse.ArgumentParser:
     )
     full.add_argument("--config", required=True, type=Path)
     full.add_argument("--output", required=True, type=Path)
+
+    fetch = subparsers.add_parser(
+        "fetch-external", help="fetch pinned external benchmark snapshots"
+    )
+    fetch.add_argument("--config", required=True, type=Path)
+    fetch.add_argument("--output", required=True, type=Path)
+
+    prepare = subparsers.add_parser(
+        "prepare-external", help="prepare and leakage-check external benchmarks"
+    )
+    prepare.add_argument("--config", required=True, type=Path)
+    prepare.add_argument("--raw", required=True, type=Path)
+    prepare.add_argument("--internal", required=True, type=Path)
+    prepare.add_argument("--output", required=True, type=Path)
 
     audit = subparsers.add_parser(
         "audit-pairs", help="print every pair for human inspection"
@@ -114,6 +142,21 @@ def build_parser() -> argparse.ArgumentParser:
     compare.add_argument("--evaluations", required=True, type=Path)
     compare.add_argument("--output", type=Path, default=None)
 
+    external_infer = subparsers.add_parser(
+        "infer-external", help="run resumable MLX inference on external records"
+    )
+    external_infer.add_argument("--config", required=True, type=Path)
+    external_infer.add_argument("--records", required=True, type=Path)
+    external_infer.add_argument("--output", required=True, type=Path)
+    external_infer.add_argument("--limit", type=int, default=None)
+
+    external_eval = subparsers.add_parser(
+        "evaluate-external", help="score stored external decision predictions"
+    )
+    external_eval.add_argument("--records", required=True, type=Path)
+    external_eval.add_argument("--predictions", required=True, type=Path)
+    external_eval.add_argument("--output", required=True, type=Path)
+
     infer = subparsers.add_parser("infer", help="run resumable local MLX inference")
     infer.add_argument("--config", required=True, type=Path)
     infer.add_argument("--tasks", required=True, type=Path)
@@ -155,6 +198,16 @@ def main(argv: Sequence[str] | None = None) -> None:
                 f"generated {manifest['pair_count']} pairs / "
                 f"{manifest['task_count']} tasks in {args.output}"
             )
+            return
+        if args.command == "fetch-external":
+            fetched = fetch_external(args.config, args.output)
+            print(json.dumps(fetched, indent=2))
+            return
+        if args.command == "prepare-external":
+            manifest = prepare_external(
+                args.config, args.raw, args.internal, args.output
+            )
+            print(json.dumps(manifest, indent=2))
             return
         if args.command == "audit-pairs":
             print(audit_pairs(load_pairs(args.path)))
@@ -207,6 +260,75 @@ def main(argv: Sequence[str] | None = None) -> None:
             if args.output is not None:
                 args.output.write_text(rendered + "\n", encoding="utf-8")
             print(rendered)
+            return
+        if args.command == "infer-external":
+            external_config = load_inference_config(args.config)
+            records = [
+                ExternalDecisionRecord.model_validate(value)
+                for value in read_jsonl(args.records)
+            ]
+            examples = [
+                PromptExample(
+                    id=record.id,
+                    messages=(
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        *(message.model_dump() for message in record.messages),
+                    ),
+                    tools=tuple(
+                        {
+                            "type": "function",
+                            "function": function.model_dump(),
+                        }
+                        for function in record.functions
+                    ),
+                )
+                for record in records
+            ]
+            predictions = run_prompt_inference(
+                examples,
+                MlxBackend(external_config),
+                args.output,
+                limit=args.limit,
+            )
+            selected = examples[: args.limit] if args.limit is not None else examples
+            manifest = {
+                "schema_version": 1,
+                "model": external_config.model,
+                "revision": external_config.revision,
+                "prompt_variant": external_config.prompt_variant,
+                "record_ids_hash": sha256_object([example.id for example in selected]),
+                "records_hash": sha256_file(args.records),
+                "predictions_hash": sha256_file(args.output),
+            }
+            args.output.with_name("run_manifest.json").write_bytes(
+                canonical_json_bytes(manifest) + b"\n"
+            )
+            print(f"stored {len(predictions)} external predictions in {args.output}")
+            return
+        if args.command == "evaluate-external":
+            records = [
+                ExternalDecisionRecord.model_validate(value)
+                for value in read_jsonl(args.records)
+            ]
+            predictions = [
+                PredictionRecord.model_validate(value)
+                for value in read_jsonl(args.predictions)
+            ]
+            external_evaluations, external_metrics = evaluate_external_records(
+                records, predictions
+            )
+            write_jsonl(
+                args.output / "evaluations.jsonl",
+                [
+                    evaluation.model_dump(mode="json")
+                    for evaluation in external_evaluations
+                ],
+            )
+            args.output.mkdir(parents=True, exist_ok=True)
+            (args.output / "metrics.json").write_bytes(
+                canonical_json_bytes(external_metrics.model_dump(mode="json")) + b"\n"
+            )
+            print(external_metrics.model_dump_json(indent=2))
             return
         if args.command == "infer":
             inference_config = load_inference_config(args.config)

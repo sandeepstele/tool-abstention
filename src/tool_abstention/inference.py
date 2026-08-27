@@ -51,6 +51,20 @@ class InferenceBackend(Protocol):
     def predict(self, task: TaskRecord) -> PredictionRecord: ...
 
 
+class PromptExample(BaseModel):
+    """Generic prompt boundary for provenance-preserving external evaluation."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    id: str = Field(pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+    messages: tuple[dict[str, str], ...] = Field(min_length=1)
+    tools: tuple[dict[str, Any], ...] = Field(min_length=1)
+
+
+class PromptBackend(Protocol):
+    def predict_prompt(self, example: PromptExample) -> PredictionRecord: ...
+
+
 SYSTEM_PROMPT = """You are a tool-use decision agent. Choose exactly one behavior:
 - Call one visible tool only when it is necessary and all required arguments exist.
 - Answer directly when the answer is already present in the request or context.
@@ -141,16 +155,30 @@ class MlxBackend:
 
     def predict(self, task: TaskRecord) -> PredictionRecord:
         """Generate one greedy prediction and capture cost metadata."""
+        return self._predict(
+            task.id,
+            task_messages(task, self.config.prompt_variant),
+            tuple(_openai_tool(tool) for tool in task.tools),
+        )
+
+    def predict_prompt(self, example: PromptExample) -> PredictionRecord:
+        """Generate from a generic external prompt using the same backend settings."""
+        return self._predict(example.id, list(example.messages), example.tools)
+
+    def _predict(
+        self,
+        task_id: str,
+        messages: list[dict[str, str]],
+        tools: tuple[dict[str, Any], ...],
+    ) -> PredictionRecord:
         template_arguments: dict[str, Any] = {
             "add_generation_prompt": True,
             "tokenize": False,
             "enable_thinking": False,
         }
         if self.config.prompt_variant is not PromptVariant.EMBEDDED_TOOLS:
-            template_arguments["tools"] = [_openai_tool(tool) for tool in task.tools]
-        prompt = self._tokenizer.apply_chat_template(
-            task_messages(task, self.config.prompt_variant), **template_arguments
-        )
+            template_arguments["tools"] = list(tools)
+        prompt = self._tokenizer.apply_chat_template(messages, **template_arguments)
         if not isinstance(prompt, str):
             raise TypeError("chat template must return text when tokenize=False")
         input_tokens = len(self._tokenizer.encode(prompt, add_special_tokens=False))
@@ -168,7 +196,7 @@ class MlxBackend:
         output_tokens = len(self._tokenizer.encode(response, add_special_tokens=False))
         parsed = parse_tool_call_text(response)
         return PredictionRecord(
-            task_id=task.id,
+            task_id=task_id,
             raw_text=response,
             tool_call=parsed,
             latency_ms=latency_ms,
@@ -221,6 +249,43 @@ def run_inference(
         _append_prediction(output_path, prediction)
         by_id[task.id] = prediction
     return [by_id[task.id] for task in selected]
+
+
+def run_prompt_inference(
+    examples: Sequence[PromptExample],
+    backend: PromptBackend,
+    output_path: Path,
+    *,
+    limit: int | None = None,
+) -> list[PredictionRecord]:
+    """Run or resume generic prompt inference with durable appends."""
+    existing = (
+        [PredictionRecord.model_validate(value) for value in read_jsonl(output_path)]
+        if output_path.exists()
+        else []
+    )
+    by_id = {prediction.task_id: prediction for prediction in existing}
+    if len(by_id) != len(existing):
+        raise ValueError("existing predictions contain duplicate task ids")
+    selected = list(examples[:limit] if limit is not None else examples)
+    selected_ids = {example.id for example in selected}
+    if not set(by_id).issubset(selected_ids):
+        raise ValueError("existing predictions do not belong to selected prompts")
+    for example in selected:
+        if example.id in by_id:
+            continue
+        try:
+            prediction = backend.predict_prompt(example)
+        except Exception as error:
+            prediction = PredictionRecord(
+                task_id=example.id,
+                raw_text="",
+                latency_ms=0,
+                inference_error=f"{type(error).__name__}: {error}",
+            )
+        _append_prediction(output_path, prediction)
+        by_id[example.id] = prediction
+    return [by_id[example.id] for example in selected]
 
 
 def load_tasks(path: Path) -> list[TaskRecord]:

@@ -7,11 +7,13 @@ import pytest
 
 from tool_abstention.calibration import ANNOTATION_FIELDS
 from tool_abstention.cli import main
+from tool_abstention.external import ExternalDecision
 from tool_abstention.productivity import ProductivityConfig, generate_productivity_pairs
 from tool_abstention.taxonomy import DatasetSplit
 from tool_abstention.util.jsonl import write_jsonl
 
 from .test_evaluator import correct_prediction
+from .test_external import external_record
 from .test_records import act_task
 
 
@@ -212,3 +214,47 @@ def test_calibration_commands(
     )
     assert comparison.is_file()
     assert '"item_count": 5' in capsys.readouterr().out
+
+
+def test_evaluate_external_command(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    records = [
+        external_record("external-call", ExternalDecision.CALL),
+        external_record("external-abstain", ExternalDecision.ABSTAIN),
+    ]
+    predictions = [
+        {
+            "task_id": "external-call",
+            "raw_text": "".join(
+                (
+                    '<tool_call>{"name":"lookup",',
+                    '"arguments":{"value":"x"}}</tool_call>',
+                )
+            ),
+            "latency_ms": 1,
+        },
+        {
+            "task_id": "external-abstain",
+            "raw_text": "No tool is relevant.",
+            "latency_ms": 1,
+        },
+    ]
+    record_path = tmp_path / "external.jsonl"
+    prediction_path = tmp_path / "external-predictions.jsonl"
+    output = tmp_path / "external-results"
+    write_jsonl(record_path, [record.model_dump(mode="json") for record in records])
+    write_jsonl(prediction_path, predictions)
+    main(
+        [
+            "evaluate-external",
+            "--records",
+            str(record_path),
+            "--predictions",
+            str(prediction_path),
+            "--output",
+            str(output),
+        ]
+    )
+    assert '"balanced_accuracy": 1.0' in capsys.readouterr().out
+    assert (output / "evaluations.jsonl").is_file()

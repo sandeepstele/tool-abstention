@@ -1,0 +1,17 @@
+bfcl:
+  dataset: gorilla-llm/Berkeley-Function-Calling-Leaderboard
+  revision: 61fc0608cfd831fcfbbaa676ebdfef0ed963eeda
+  license: Apache-2.0
+  files:
+    - BFCL_v3_simple.json
+    - BFCL_v3_irrelevance.json
+  expected_records:
+    BFCL_v3_simple.json: 400
+    BFCL_v3_irrelevance.json: 240
+agentabstain:
+  dataset: antiquality/agentabstain
+  revision: 842228426c2a703347396501af61c7890972c7ee
+  license: CC-BY-4.0
+  code_revision: f581249704b26804e28a39e37396f1be00b71a4d
+  expected_pairs: 263
+  expected_environments: 42

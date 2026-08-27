@@ -30,6 +30,7 @@ dev = [
   "types-pyyaml>=6.0.12.20241230",
 ]
 inference = ["mlx-lm>=0.29,<0.30"]
+external-data = ["huggingface-hub>=1.0,<2"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/tool_abstention"]

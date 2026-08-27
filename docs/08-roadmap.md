@@ -9,9 +9,13 @@ canonical contracts, executable tools, deterministic evaluation, grouped 60/20/2
 splits, test hashing, and the full manifest are implemented. The larger 600-pair
 roadmap target remains a pre-final-experiment expansion goal.
 
-**Phase 2 — baseline inference: in progress.** The pinned 0.5B MLX model completed
-an eight-task, four-class Metal smoke run with stored raw outputs and provenance.
-Full validation inference, 25-failure analysis, and human calibration remain open.
+**Phase 2 — baseline inference: complete.** The pinned 1.5B MLX model completed
+internal validation and the 640-record non-overlapping BFCL external decision
+benchmark on Metal. Evaluator calibration agrees with all 60 owner-verified
+adjudications. Raw outputs, manifests, metrics, and limitations are retained.
+
+**Next gate:** build SFT records and train the first 1.5B adapter. Public benchmark
+records remain evaluation-only, and the internal held-out test split remains sealed.
 
 ---
 

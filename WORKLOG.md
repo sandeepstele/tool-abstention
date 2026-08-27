@@ -629,3 +629,107 @@ failures and keeping raw model predictions immutable.
 
 Implement provenance-aware public dataset adapters and leakage controls. Keep BFCL
 and AgentAbstain external evaluation partitions out of training.
+
+## 2026-08-27 — Milestone H: external provenance and BFCL evaluation
+
+### Objective and boundaries
+
+- Add pinned BFCL evaluation and a native AgentAbstain catalog without admitting
+  public benchmark records to SFT or preference training.
+- Preserve the internal test split: it was read only for leakage comparison; no
+  internal test prediction was generated or inspected.
+- Keep CI CPU-only and network-free through local fixtures and an optional
+  `external-data` dependency group.
+
+### Contracts and implementation
+
+- Added immutable, extra-forbidding provenance and external-decision contracts.
+  Provenance requires a 40-character revision, recognized SPDX license, original
+  ID/file, source SHA-256, adapter version, transformations, attribution, and usage.
+  Benchmark-only provenance rejects `training` usage.
+- Added pinned external source configuration and expected real-source counts.
+- Added `fetch-external`, `prepare-external`, `infer-external`, and
+  `evaluate-external`, plus reproducible Make targets.
+- Fetching is restricted to the two declared BFCL files and AgentAbstain's README,
+  tasks, and environments. Canonical fetch manifests omit downloader cache metadata.
+- Added recursive BFCL schema normalization. The fixture-supported mappings were
+  extended after real preparation exposed `tuple` and explicit `any`: tuple maps to
+  JSON Schema array; `any` faithfully omits a type constraint while retaining its
+  metadata. All unknown types still fail closed.
+- Added exact, normalized five-gram Jaccard (0.80), and SequenceMatcher (0.90)
+  leakage checks across internal train, validation, and test data. Matches are
+  quarantined and retained in a separate report.
+- Added native AgentAbstain pair/environment cataloging, side integrity checks,
+  required task files, environment-reference validation, and content hashes. No
+  multi-turn conversion or execution was added.
+- Generalized the inference boundary with `PromptExample` and resumable prompt
+  prediction while preserving the existing `TaskRecord` path.
+- The external evaluator records decision correctness and protocol validity
+  separately. A malformed call attempt is CALL behavior and is counted in the
+  malformed-call rate.
+
+### Source fetch and factual correction
+
+- Initial `uv lock` with `huggingface-hub<1` downgraded the verified Transformers
+  stack; changed the group to `huggingface-hub>=1,<2`, restoring
+  huggingface-hub 1.28.0, Transformers 5.16.1, and tokenizers 0.23.1.
+- Fetched BFCL revision `61fc0608cfd831fcfbbaa676ebdfef0ed963eeda` and
+  AgentAbstain revision `842228426c2a703347396501af61c7890972c7ee` without
+  credentials. The hub emitted only an unauthenticated-rate-limit warning.
+- The requested count of 239 BFCL irrelevance records was incorrect. The pinned
+  file has IDs `irrelevance_0` through `irrelevance_239`, and official BFCL
+  documentation states 240. Retained all official records instead of silently
+  deleting one: 400 CALL plus 240 ABSTAIN, 640 total.
+- Raw hashes: BFCL simple
+  `fbc37b2ad252bf9af985582e0e07b456173fe627d957491472ea9cef5fb83158`,
+  BFCL irrelevance
+  `975f51c51f688649fd190078efd87081241e0a326f9114a2ea3c1ca2440d8690`,
+  AgentAbstain content
+  `76f4d15cbbc27a6806ef7ee5530f93f084eeb14dbe5242bf07562351cb9b248d`.
+- Two cached fetches produced the same manifest hash
+  `414e7d9cdcc40f50a74345c1faea9824be18a539e3bdf6c22168c7d491278d6a`.
+- Preparation found zero internal overlaps. The prepared BFCL hash is
+  `89f296ce30834a665a679583e434b6ffa1a2dcfaa54e664451c2117bed112303`.
+  Repeated preparations produced manifest hash
+  `e718a771f3331cb0a893e8cbd223b5d053b6b33bbc669be584a7affba09fb1b3`.
+- AgentAbstain matched 263 pairs and 42 environments exactly.
+
+### Local baseline and results
+
+- The first inference smoke inside the restricted sandbox failed with
+  `No Metal device available`. Reran with approved local Metal access; eight real
+  records completed successfully.
+- Ran all 640 non-overlapping BFCL records with pinned
+  `mlx-community/Qwen2.5-1.5B-Instruct-4bit@8b403126fc14f14cfc99bb4cfa72ecbc129ea677`,
+  seed 0, temperature 0, and `native-full`. All predictions completed with zero
+  inference errors; mean latency was 676.65 ms per record.
+- Results: 88.44% decision accuracy, 99.25% CALL accuracy, 70.42% ABSTAIN
+  accuracy, 84.83% balanced accuracy, 73.12% tool-call rate, and 3.91% malformed
+  call rate.
+- Prediction hash:
+  `c2085f581f3936424977d02331f0ef5df60eb8ce4969305beb0928db0a28d222`.
+  Raw output and latency are retained. The installed MLX generation boundary did
+  not expose useful token or peak-memory counters, so optional fields remain absent.
+
+### Verification record
+
+- An intermediate `make check` passed Ruff and strict mypy and all 149 tests, but
+  aggregate coverage was 94.79%, below the 95% gate. Added real catalog integrity
+  branch tests before the final gate.
+- A targeted one-test run passed its assertion but correctly failed the global
+  coverage threshold; isolated tests are diagnostic only, and acceptance uses the
+  complete suite.
+- The session could not write the default global uv cache, so verification used
+  `UV_CACHE_DIR=/private/tmp/tool-abstention-uv-cache` without changing the lock or
+  environment semantics.
+- Documentation now records provenance, commands, source-count correction,
+  evaluation scope, results, and limitations. Raw datasets and model artifacts stay
+  ignored; reproducible prediction/evaluation evidence is tracked.
+- The first final gate caught two Ruff formatting changes; the project formatter
+  corrected them. The next lint pass caught an unescaped regex dot in a test and it
+  was made explicit.
+- The first fixture fetch test reused its output directory without `exist_ok=True`
+  and failed on the second reproducibility pass. Corrected the fake downloader; this
+  was test scaffolding only, not production fetch behavior.
+- Final `make check` passed: Ruff formatting/lint clean, strict mypy clean over 35
+  source files, and all 150 tests passed with 95.28% aggregate coverage.

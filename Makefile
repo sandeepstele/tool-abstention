@@ -1,4 +1,4 @@
-.PHONY: setup data baseline-smoke prompt-diagnostic capacity-diagnostic baseline-validation lint typecheck test check
+.PHONY: setup data external-fetch external-prepare external-baseline baseline-smoke prompt-diagnostic capacity-diagnostic baseline-validation lint typecheck test check
 
 setup:
 	uv sync --locked
@@ -7,6 +7,28 @@ data:
 	uv run tool-abstention generate-dataset \
 		--config configs/data/full.yaml \
 		--output data/processed
+
+external-fetch:
+	uv run --group external-data tool-abstention fetch-external \
+		--config configs/data/external.yaml \
+		--output data/external/raw
+
+external-prepare: data
+	uv run tool-abstention prepare-external \
+		--config configs/data/external.yaml \
+		--raw data/external/raw \
+		--internal data/processed \
+		--output data/external/prepared
+
+external-baseline: external-prepare
+	uv run --group inference tool-abstention infer-external \
+		--config configs/models/qwen-1.5b-diagnostic.yaml \
+		--records data/external/prepared/bfcl.jsonl \
+		--output results/external/bfcl/predictions.jsonl
+	uv run tool-abstention evaluate-external \
+		--records data/external/prepared/bfcl.jsonl \
+		--predictions results/external/bfcl/predictions.jsonl \
+		--output results/external/bfcl
 
 baseline-smoke: data
 	uv run --group inference tool-abstention infer \

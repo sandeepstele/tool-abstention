@@ -73,6 +73,13 @@ We build our own data (not borrow a dataset) because **owning the labels** is a 
 - AgentAbstain is multi-turn/agentic with irreversible state — heavier than our single-turn decision, and its 8 scenarios don't map cleanly onto our 5-class scheme.
 - Licensing: When2Call is CC-BY-4.0 (fine to *build on*), but a from-scratch generator keeps us Apache-2.0-clean and reproducible.
 
+Public data is now used only as a separately contracted external evaluation
+partition. BFCL is normalized into CALL-versus-ABSTAIN decision records and checked
+against every internal split for exact and near-duplicate queries. AgentAbstain is
+cataloged in its native paired multi-turn form without conversion. Neither source
+is permitted in training; provenance validation rejects that usage. See
+[`13-external-data.md`](13-external-data.md).
+
 ## 6. Label determinism & verifiability (no LLM judge)
 
 Each abstain class is deterministically decidable from **construction + surface output**:
