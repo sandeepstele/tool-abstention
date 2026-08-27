@@ -1,0 +1,61 @@
+audit_id,predicted_behavior,semantic_correctness,format_acceptable,notes
+audit-001,CALL,YES,YES,
+audit-002,CALL,YES,YES,
+audit-003,CALL,NO,YES,invented unavailable tool
+audit-004,CALL,NO,YES,acted despite missing required information
+audit-005,CALL,YES,YES,
+audit-006,CALL,YES,YES,
+audit-007,CALL,NO,YES,invented recipient instead of clarifying
+audit-008,CALL,NO,YES,acted on an already completed task
+audit-009,ANSWER,YES,YES,
+audit-010,CALL,YES,YES,
+audit-011,CALL,YES,YES,
+audit-012,CALL,NO,YES,invented recipient instead of clarifying
+audit-013,ANSWER,NO,YES,answered without the required state lookup
+audit-014,CALL,YES,YES,
+audit-015,ANSWER,YES,YES,
+audit-016,CALL,YES,YES,
+audit-017,ANSWER,YES,YES,
+audit-018,CALL,NO,YES,acted on an already completed task
+audit-019,CALL,YES,YES,
+audit-020,ANSWER,YES,YES,
+audit-021,CALL,NO,YES,acted on an already completed task
+audit-022,REFUSE,YES,YES,
+audit-023,CALL,YES,YES,
+audit-024,CALL,NO,YES,invented recipient instead of clarifying
+audit-025,CALL,YES,YES,
+audit-026,CALL,NO,YES,acted on an already completed task
+audit-027,CALL,NO,YES,acted on an already completed task
+audit-028,ANSWER,YES,YES,
+audit-029,CALL,NO,YES,invented unavailable tool
+audit-030,CALL,NO,YES,acted on an already completed task
+audit-031,ANSWER,YES,YES,
+audit-032,CALL,NO,YES,invented unavailable tool
+audit-033,ANSWER,YES,YES,
+audit-034,REFUSE,YES,YES,
+audit-035,ANSWER,YES,YES,
+audit-036,REFUSE,YES,YES,
+audit-037,CALL,NO,YES,acted despite missing required information
+audit-038,CALL,NO,YES,acted despite missing required information
+audit-039,ANSWER,YES,YES,
+audit-040,CALL,NO,YES,acted on an already completed task
+audit-041,CALL,NO,YES,acted on an already completed task
+audit-042,CALL,NO,YES,acted despite missing required information
+audit-043,CALL,NO,YES,invented recipient instead of clarifying
+audit-044,CALL,NO,YES,acted on an already completed task
+audit-045,CALL,NO,YES,acted on an already completed task
+audit-046,CALL,NO,YES,acted despite missing required information
+audit-047,REFUSE,YES,YES,
+audit-048,CALL,NO,YES,acted despite missing required information
+audit-049,REFUSE,YES,YES,
+audit-050,CALL,NO,YES,acted on an already completed task
+audit-051,ANSWER,YES,YES,
+audit-052,REFUSE,YES,YES,correct refusal with an unnecessary suggestion
+audit-053,CALL,NO,YES,acted despite missing required information
+audit-054,ANSWER,YES,YES,
+audit-055,ANSWER,YES,YES,
+audit-056,CALL,NO,YES,acted on an already completed task
+audit-057,REFUSE,YES,YES,
+audit-058,CALL,NO,YES,acted despite missing required information
+audit-059,CALL,NO,YES,invented unavailable tool
+audit-060,REFUSE,YES,YES,

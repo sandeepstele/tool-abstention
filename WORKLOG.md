@@ -562,3 +562,29 @@ human labels before changing evaluator semantics or beginning training.
 - After the completed CSV returns, validate it, calculate agreement if a second
   annotator participates, adjudicate uncertain cases, then change evaluator rules
   only where labels demonstrate systematic disagreement.
+## 2026-08-26 — Complete AI adjudication of calibration round 1
+
+### Objective
+
+Complete the 60-item semantic review at the owner's explicit request without
+misrepresenting AI-generated judgments as independent human annotations.
+
+### Actions and outcomes
+
+- Reviewed every blinded packet item and wrote `annotations.agent.csv`.
+- Added a provenance sidecar declaring `annotator_type: ai` and
+  `independent_human_annotation: false`.
+- Classified 39 outputs as CALL, 13 as ANSWER, and 8 as REFUSE.
+- Judged 31 outputs semantically correct and 29 incorrect; all 60 used acceptable
+  response syntax even when the selected action was unsafe or unavailable.
+- `validate-calibration` accepted all 60 rows with no missing, duplicate, foreign,
+  or invalid fields.
+
+### Interpretation and next action
+
+- The adjudication supports two evaluator changes to test explicitly: recognize
+  “none of the provided/available functions” as REFUSE, and separate semantic
+  answer correctness from exact protocol compliance.
+- These labels can drive provisional regression tests and evaluator development,
+  but must be described as AI adjudication in reports. Independent human agreement
+  remains optional follow-up evidence, not a completed claim.
