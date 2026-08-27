@@ -1,11 +1,18 @@
 """Command-line interface for project utilities."""
 
 import argparse
+import json
 from collections.abc import Sequence
 from pathlib import Path
 from typing import cast
 
 from tool_abstention import __version__
+from tool_abstention.calibration import (
+    agreement_summary,
+    annotation_summary,
+    export_calibration_packet,
+    load_annotations,
+)
 from tool_abstention.config import ProjectConfig, load_yaml_config
 from tool_abstention.dataset import build_full_dataset
 from tool_abstention.harness import evaluate_files
@@ -23,7 +30,9 @@ from tool_abstention.productivity import (
     build_productivity_dataset,
     load_pairs,
 )
+from tool_abstention.records import PredictionRecord
 from tool_abstention.schemas import SchemaKind, export_schemas, validate_record
+from tool_abstention.util.jsonl import read_jsonl
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -75,6 +84,27 @@ def build_parser() -> argparse.ArgumentParser:
     evaluate.add_argument("--predictions", required=True, type=Path)
     evaluate.add_argument("--output", required=True, type=Path)
 
+    calibration = subparsers.add_parser(
+        "export-calibration", help="export a blinded human calibration packet"
+    )
+    calibration.add_argument("--tasks", required=True, type=Path)
+    calibration.add_argument("--predictions", required=True, type=Path)
+    calibration.add_argument("--output", required=True, type=Path)
+    calibration.add_argument("--per-cell", type=int, default=4)
+
+    labels = subparsers.add_parser(
+        "validate-calibration", help="validate completed human calibration labels"
+    )
+    labels.add_argument("--annotations", required=True, type=Path)
+    labels.add_argument("--mapping", required=True, type=Path)
+
+    agreement = subparsers.add_parser(
+        "calibration-agreement", help="compare two independent annotation files"
+    )
+    agreement.add_argument("--first", required=True, type=Path)
+    agreement.add_argument("--second", required=True, type=Path)
+    agreement.add_argument("--mapping", required=True, type=Path)
+
     infer = subparsers.add_parser("infer", help="run resumable local MLX inference")
     infer.add_argument("--config", required=True, type=Path)
     infer.add_argument("--tasks", required=True, type=Path)
@@ -123,6 +153,35 @@ def main(argv: Sequence[str] | None = None) -> None:
         if args.command == "evaluate":
             metrics = evaluate_files(args.tasks, args.predictions, args.output)
             print(metrics.model_dump_json(indent=2))
+            return
+        if args.command == "export-calibration":
+            calibration_tasks = load_tasks(args.tasks)
+            calibration_predictions = [
+                PredictionRecord.model_validate(value)
+                for value in read_jsonl(args.predictions)
+            ]
+            manifest = export_calibration_packet(
+                calibration_tasks,
+                calibration_predictions,
+                args.output,
+                per_cell=args.per_cell,
+            )
+            print(f"exported {manifest['item_count']} blinded items to {args.output}")
+            return
+        if args.command == "validate-calibration":
+            expected_ids = {
+                str(value["audit_id"]) for value in read_jsonl(args.mapping)
+            }
+            annotations = load_annotations(args.annotations, expected_ids)
+            print(json.dumps(annotation_summary(annotations), indent=2))
+            return
+        if args.command == "calibration-agreement":
+            expected_ids = {
+                str(value["audit_id"]) for value in read_jsonl(args.mapping)
+            }
+            first = load_annotations(args.first, expected_ids)
+            second = load_annotations(args.second, expected_ids)
+            print(json.dumps(agreement_summary(first, second), indent=2))
             return
         if args.command == "infer":
             inference_config = load_inference_config(args.config)

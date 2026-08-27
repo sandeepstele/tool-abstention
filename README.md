@@ -95,6 +95,20 @@ parses plain/OpenAI/Qwen-style tool calls, validates class-specific behavior, an
 writes per-example judgments plus accuracy, paired accuracy, macro-F1, act and
 abstention accuracy, hallucination rate, and per-class metrics.
 
+Human evaluator calibration uses a deterministic, blinded 60-item packet balanced
+across all five classes and three domains. Open
+[`calibration/round-1/annotate.html`](calibration/round-1/annotate.html), complete
+the labels, and download `annotations.completed.csv`. Validate returned labels with:
+
+```bash
+uv run tool-abstention validate-calibration \
+  --annotations path/to/annotations.completed.csv \
+  --mapping calibration/round-1/mapping.jsonl
+```
+
+Two independent annotation files can be compared with `calibration-agreement`,
+which reports exact agreement and Cohen's kappa for every judgment axis.
+
 The smoke model is pinned to
 `mlx-community/Qwen2.5-0.5B-Instruct-4bit@53a32aee5e9447773fd2b85988395066aef3700a`.
 The capacity diagnostic pins

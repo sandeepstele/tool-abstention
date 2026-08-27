@@ -1,9 +1,11 @@
 """Tests for the command-line entry point."""
 
+import csv
 from pathlib import Path
 
 import pytest
 
+from tool_abstention.calibration import ANNOTATION_FIELDS
 from tool_abstention.cli import main
 from tool_abstention.productivity import ProductivityConfig, generate_productivity_pairs
 from tool_abstention.taxonomy import DatasetSplit
@@ -117,3 +119,68 @@ def test_evaluate_command(tmp_path: Path, capsys: pytest.CaptureFixture[str]) ->
         ]
     )
     assert '"paired_accuracy": 1.0' in capsys.readouterr().out
+
+
+def test_calibration_commands(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    pairs = generate_productivity_pairs(
+        ProductivityConfig(
+            seed=0,
+            pairs_per_class=1,
+            generator_version="1.0.0",
+            split=DatasetSplit.VALIDATION,
+        )
+    )
+    tasks = [task for pair in pairs for task in (pair.act, pair.abstain)]
+    task_path = tmp_path / "tasks.jsonl"
+    prediction_path = tmp_path / "predictions.jsonl"
+    packet = tmp_path / "packet"
+    write_jsonl(task_path, [task.model_dump(mode="json") for task in tasks])
+    write_jsonl(
+        prediction_path,
+        [correct_prediction(task).model_dump(mode="json") for task in tasks],
+    )
+    main(
+        [
+            "export-calibration",
+            "--tasks",
+            str(task_path),
+            "--predictions",
+            str(prediction_path),
+            "--output",
+            str(packet),
+            "--per-cell",
+            "1",
+        ]
+    )
+    assert "exported 5 blinded items" in capsys.readouterr().out
+
+    completed = tmp_path / "completed.csv"
+    with completed.open("w", encoding="utf-8", newline="") as stream:
+        writer = csv.DictWriter(stream, fieldnames=ANNOTATION_FIELDS)
+        writer.writeheader()
+        for number in range(1, 6):
+            writer.writerow(
+                {
+                    "audit_id": f"audit-{number:03d}",
+                    "predicted_behavior": "ANSWER",
+                    "semantic_correctness": "YES",
+                    "format_acceptable": "YES",
+                    "notes": "",
+                }
+            )
+    common = ["--mapping", str(packet / "mapping.jsonl")]
+    main(["validate-calibration", "--annotations", str(completed), *common])
+    assert '"item_count": 5' in capsys.readouterr().out
+    main(
+        [
+            "calibration-agreement",
+            "--first",
+            str(completed),
+            "--second",
+            str(completed),
+            *common,
+        ]
+    )
+    assert '"cohen_kappa": 1.0' in capsys.readouterr().out

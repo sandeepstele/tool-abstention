@@ -519,3 +519,46 @@ strict parsing, or insufficient model capacity before running full validation.
 - Calibrate answer and refusal judgments against stratified human labels, add
   regression cases for accepted corrections, and re-evaluate the stored baseline
   without rerunning the model. Do not inspect the held-out test split yet.
+## 2026-08-26 — Build blinded human evaluator calibration
+
+### Objective
+
+Replace agent-assisted failure impressions with a reproducible workflow for real
+human labels before changing evaluator semantics or beginning training.
+
+### Changes and decisions
+
+- Added a deterministic validation-only sampler with four examples per
+  domain/class cell: 60 total items across three domains and five labels.
+- Generated `calibration/round-1` from the frozen 1.5B validation predictions.
+- Blinded the browser interface to task IDs, gold labels, and evaluator results.
+- Added browser-local progress, six behavior choices including `UNCLEAR`, ternary
+  semantic correctness, binary format acceptability, notes, and CSV export.
+- Added a strict CSV loader rejecting incomplete fields, unknown values, duplicate
+  IDs, foreign IDs, and schema changes.
+- Added summaries plus two-annotator exact agreement and Cohen's kappa reporting.
+- Kept semantic correctness separate from protocol compliance; no evaluator rule
+  has been loosened before human evidence exists.
+
+### Commands and outcomes
+
+- Initial `make check` found long embedded HTML/JavaScript lines and one unused
+  import. Used a file-level E501 exemption for the embedded asset and removed the
+  import; all other Ruff rules remain active.
+- The next run caught an incorrect test assumption that the private mapping would
+  not contain domain-bearing task IDs. Corrected the test to verify that IDs and
+  expected results are absent from the annotator-facing HTML.
+- A focused four-test run passed its cases but correctly failed the repository's
+  whole-suite 95% coverage threshold; verification therefore uses `make check`.
+- Exported 60 real items with selection hash
+  `4c1f1612009f7bb68a621cd3d86a06bf6ba7726bc041fcc88bb5a13c97907c92`
+  and selected-predictions hash
+  `efeaaff204129e9bea4f989c56d0e08586faab5d78203594f0b0510738ee6185`.
+
+### Manual blocker and next action
+
+- A real person must complete `calibration/round-1/annotate.html`; agent-generated
+  labels will not be represented as human annotations.
+- After the completed CSV returns, validate it, calculate agreement if a second
+  annotator participates, adjudicate uncertain cases, then change evaluator rules
+  only where labels demonstrate systematic disagreement.
