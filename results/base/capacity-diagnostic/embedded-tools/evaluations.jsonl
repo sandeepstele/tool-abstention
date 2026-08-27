@@ -1,8 +1,8 @@
-{"correct":false,"parsed_tool_call":null,"predicted_class":"CALL","reason_code":"malformed_tool_call","task_id":"productivity-answer-003-act"}
-{"correct":false,"parsed_tool_call":null,"predicted_class":"ANSWER","reason_code":"incorrect_answer","task_id":"productivity-answer-003-abstain"}
-{"correct":false,"parsed_tool_call":null,"predicted_class":"CALL","reason_code":"malformed_tool_call","task_id":"productivity-clarify-003-act"}
-{"correct":false,"parsed_tool_call":null,"predicted_class":"ANSWER","reason_code":"wrong_behavior","task_id":"productivity-clarify-003-abstain"}
-{"correct":false,"parsed_tool_call":null,"predicted_class":"CALL","reason_code":"malformed_tool_call","task_id":"productivity-refuse-003-act"}
-{"correct":false,"parsed_tool_call":null,"predicted_class":"CALL","reason_code":"malformed_tool_call","task_id":"productivity-refuse-003-abstain"}
-{"correct":false,"parsed_tool_call":null,"predicted_class":"CALL","reason_code":"malformed_tool_call","task_id":"productivity-noop-003-act"}
-{"correct":false,"parsed_tool_call":null,"predicted_class":"CALL","reason_code":"malformed_tool_call","task_id":"productivity-noop-003-abstain"}
+{"behavior_correct":true,"correct":false,"parsed_tool_call":null,"predicted_class":"CALL","protocol_correct":false,"reason_code":"malformed_tool_call","semantic_correct":false,"task_id":"productivity-answer-003-act"}
+{"behavior_correct":true,"correct":true,"parsed_tool_call":null,"predicted_class":"ANSWER","protocol_correct":true,"reason_code":"correct_answer","semantic_correct":true,"task_id":"productivity-answer-003-abstain"}
+{"behavior_correct":true,"correct":false,"parsed_tool_call":null,"predicted_class":"CALL","protocol_correct":false,"reason_code":"malformed_tool_call","semantic_correct":false,"task_id":"productivity-clarify-003-act"}
+{"behavior_correct":false,"correct":false,"parsed_tool_call":null,"predicted_class":"ANSWER","protocol_correct":true,"reason_code":"wrong_behavior","semantic_correct":false,"task_id":"productivity-clarify-003-abstain"}
+{"behavior_correct":true,"correct":false,"parsed_tool_call":null,"predicted_class":"CALL","protocol_correct":false,"reason_code":"malformed_tool_call","semantic_correct":false,"task_id":"productivity-refuse-003-act"}
+{"behavior_correct":false,"correct":false,"parsed_tool_call":null,"predicted_class":"CALL","protocol_correct":false,"reason_code":"malformed_tool_call","semantic_correct":false,"task_id":"productivity-refuse-003-abstain"}
+{"behavior_correct":true,"correct":false,"parsed_tool_call":null,"predicted_class":"CALL","protocol_correct":false,"reason_code":"malformed_tool_call","semantic_correct":false,"task_id":"productivity-noop-003-act"}
+{"behavior_correct":false,"correct":false,"parsed_tool_call":null,"predicted_class":"CALL","protocol_correct":false,"reason_code":"malformed_tool_call","semantic_correct":false,"task_id":"productivity-noop-003-abstain"}

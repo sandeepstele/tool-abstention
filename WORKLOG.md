@@ -588,3 +588,44 @@ misrepresenting AI-generated judgments as independent human annotations.
 - These labels can drive provisional regression tests and evaluator development,
   but must be described as AI adjudication in reports. Independent human agreement
   remains optional follow-up evidence, not a completed claim.
+## 2026-08-26 — Calibrate evaluator against owner-verified adjudication
+
+### Objective
+
+Correct demonstrated evaluator false negatives while preserving unsafe-call
+failures and keeping raw model predictions immutable.
+
+### Changes
+
+- Recorded owner verification in the AI-adjudication provenance sidecar; the file
+  remains explicitly non-independent and AI-generated.
+- Extended each evaluation record with behavior, semantic, and protocol axes.
+- Defined headline correctness as correct behavior plus semantic correctness.
+- Accepted case-aware exact atomic answers inside natural response sentences.
+- Recognized “none of the provided/available functions/tools” as REFUSE.
+- Added behavior, semantic, and protocol aggregate rates.
+- Versioned the calibrated metric policy as evaluator `2.0.0` in every metrics
+  artifact so scoring changes remain distinct from model changes.
+- Added a deterministic CLI comparison between verified annotations and evaluator
+  outputs, with explicit disagreement records.
+- Updated the fixed public evaluation-schema hash and regression tests.
+
+### Verification and results
+
+- Re-evaluated 120 stored validation predictions without running inference.
+- Accuracy changed from 41.67% to 62.5%, abstention accuracy from 0% to 41.67%,
+  paired accuracy from 0% to 25%, and macro-F1 from 25.79% to 44.79%.
+- Act accuracy remained 83.33% and abstention tool hallucination remained 58.33%;
+  genuine unsafe behavior was not forgiven by calibration.
+- The calibrated evaluator achieved 100% behavior, semantic, and protocol
+  agreement on all 60 owner-verified items with zero disagreements.
+- Re-evaluated all six prompt/capacity diagnostics under the new schema without
+  rerunning either model.
+- `make check` passed before artifact refresh: Ruff clean, strict mypy clean over
+  33 source files, and 136 tests passed with 96.02% coverage. A final gate follows
+  documentation updates.
+
+### Next action
+
+Implement provenance-aware public dataset adapters and leakage controls. Keep BFCL
+and AgentAbstain external evaluation partitions out of training.

@@ -29,6 +29,9 @@ def tasks_and_evaluations() -> tuple[list[TaskRecord], list[EvaluationRecord]]:
         EvaluationRecord(
             task_id=task.id,
             predicted_class=task.label,
+            behavior_correct=True,
+            semantic_correct=True,
+            protocol_correct=True,
             correct=True,
             reason_code="correct",
         )
@@ -40,9 +43,13 @@ def tasks_and_evaluations() -> tuple[list[TaskRecord], list[EvaluationRecord]]:
 def test_perfect_metrics() -> None:
     tasks, evaluations = tasks_and_evaluations()
     summary = compute_metrics(tasks, evaluations)
+    assert summary.evaluator_version == "2.0.0"
     assert summary.task_count == 8
     assert summary.pair_count == 4
     assert summary.accuracy == 1
+    assert summary.behavior_accuracy == 1
+    assert summary.semantic_accuracy == 1
+    assert summary.protocol_compliance_rate == 1
     assert summary.paired_accuracy == 1
     assert summary.macro_f1 == 1
     assert summary.act_accuracy == 1
@@ -56,11 +63,16 @@ def test_known_imperfect_metrics() -> None:
     evaluations[abstain_index] = EvaluationRecord(
         task_id=evaluations[abstain_index].task_id,
         predicted_class=DecisionClass.CALL,
+        behavior_correct=False,
+        semantic_correct=False,
+        protocol_correct=True,
         correct=False,
         reason_code="incorrect_tool_call",
     )
     summary = compute_metrics(tasks, evaluations)
     assert summary.accuracy == 7 / 8
+    assert summary.behavior_accuracy == 7 / 8
+    assert summary.protocol_compliance_rate == 1
     assert summary.paired_accuracy == 3 / 4
     assert summary.act_accuracy == 1
     assert summary.abstention_accuracy == 3 / 4

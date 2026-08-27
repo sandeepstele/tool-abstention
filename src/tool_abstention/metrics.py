@@ -7,6 +7,8 @@ from pydantic import Field
 from tool_abstention.records import ContractModel, EvaluationRecord, TaskRecord
 from tool_abstention.taxonomy import DecisionClass, TaskVariant
 
+EVALUATOR_VERSION = "2.0.0"
+
 
 class ClassMetrics(ContractModel):
     precision: float = Field(ge=0, le=1)
@@ -16,9 +18,13 @@ class ClassMetrics(ContractModel):
 
 
 class MetricsSummary(ContractModel):
+    evaluator_version: str
     task_count: int = Field(gt=0)
     pair_count: int = Field(gt=0)
     accuracy: float = Field(ge=0, le=1)
+    behavior_accuracy: float = Field(ge=0, le=1)
+    semantic_accuracy: float = Field(ge=0, le=1)
+    protocol_compliance_rate: float = Field(ge=0, le=1)
     paired_accuracy: float = Field(ge=0, le=1)
     macro_f1: float = Field(ge=0, le=1)
     act_accuracy: float = Field(ge=0, le=1)
@@ -50,6 +56,9 @@ def compute_metrics(
     false_negative = dict.fromkeys(DecisionClass, 0)
     support = dict.fromkeys(DecisionClass, 0)
     correct_count = 0
+    behavior_correct_count = 0
+    semantic_correct_count = 0
+    protocol_correct_count = 0
     act_correct = 0
     act_count = 0
     abstain_correct = 0
@@ -59,6 +68,9 @@ def compute_metrics(
     for task_id, task in task_by_id.items():
         evaluation = evaluation_by_id[task_id]
         correct_count += int(evaluation.correct)
+        behavior_correct_count += int(evaluation.behavior_correct)
+        semantic_correct_count += int(evaluation.semantic_correct)
+        protocol_correct_count += int(evaluation.protocol_correct)
         pairs[task.pair_id].append(evaluation.correct)
         support[task.label] += 1
         if task.variant is TaskVariant.ACT:
@@ -94,9 +106,13 @@ def compute_metrics(
             precision=precision, recall=recall, f1=f1, support=support[label]
         )
     return MetricsSummary(
+        evaluator_version=EVALUATOR_VERSION,
         task_count=len(tasks),
         pair_count=len(pairs),
         accuracy=correct_count / len(tasks),
+        behavior_accuracy=behavior_correct_count / len(tasks),
+        semantic_accuracy=semantic_correct_count / len(tasks),
+        protocol_compliance_rate=protocol_correct_count / len(tasks),
         paired_accuracy=sum(all(results) for results in pairs.values()) / len(pairs),
         macro_f1=sum(metric.f1 for metric in per_class.values()) / len(per_class),
         act_accuracy=act_correct / act_count,

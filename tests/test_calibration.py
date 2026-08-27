@@ -9,12 +9,13 @@ from tool_abstention.calibration import (
     ANNOTATION_FIELDS,
     agreement_summary,
     annotation_summary,
+    evaluator_agreement_summary,
     export_calibration_packet,
     load_annotations,
 )
 from tool_abstention.productivity import ProductivityConfig, generate_productivity_pairs
-from tool_abstention.records import PredictionRecord, TaskRecord
-from tool_abstention.taxonomy import DatasetSplit
+from tool_abstention.records import EvaluationRecord, PredictionRecord, TaskRecord
+from tool_abstention.taxonomy import DatasetSplit, DecisionClass
 
 
 def calibration_records() -> tuple[list[TaskRecord], list[PredictionRecord]]:
@@ -84,6 +85,22 @@ def test_completed_annotations_validate_and_summarize(tmp_path: Path) -> None:
     agreement = agreement_summary(rows, rows)
     assert agreement["fields"]["predicted_behavior"]["exact_agreement"] == 1
     assert agreement["fields"]["predicted_behavior"]["cohen_kappa"] == 1
+    evaluation = EvaluationRecord(
+        task_id="productivity-001-act",
+        predicted_class=DecisionClass.ANSWER,
+        behavior_correct=True,
+        semantic_correct=True,
+        protocol_correct=True,
+        correct=True,
+        reason_code="correct_answer",
+    )
+    evaluator_agreement = evaluator_agreement_summary(
+        rows, {"audit-001": evaluation.task_id}, [evaluation]
+    )
+    assert evaluator_agreement["behavior_agreement"] == 1
+    assert evaluator_agreement["semantic_agreement"] == 1
+    assert evaluator_agreement["protocol_agreement"] == 0
+    assert evaluator_agreement["disagreements"][0]["axes"] == "protocol"
 
 
 def test_annotations_reject_blank_duplicate_foreign_and_bad_columns(
@@ -121,4 +138,12 @@ def test_annotations_reject_blank_duplicate_foreign_and_bad_columns(
         agreement_summary(
             load_annotations(valid, {"audit-001"}),
             load_annotations(other_path, {"audit-002"}),
+        )
+    with pytest.raises(ValueError, match="annotations and mapping"):
+        evaluator_agreement_summary(load_annotations(valid, {"audit-001"}), {}, [])
+    with pytest.raises(ValueError, match="missing mapped"):
+        evaluator_agreement_summary(
+            load_annotations(valid, {"audit-001"}),
+            {"audit-001": "productivity-001-act"},
+            [],
         )

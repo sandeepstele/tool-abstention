@@ -27,7 +27,8 @@ from tool_abstention.taxonomy import DecisionClass
 TOOL_BLOCK = re.compile(r"<tool_call>\s*(.*?)\s*</tool_call>", re.DOTALL)
 NUMBER = re.compile(r"[-+]?\d+(?:\.\d+)?")
 REFUSAL = re.compile(
-    r"\b(cannot|can't|unable|no available tool|no tool|not equipped|unsupported)\b",
+    r"\b(cannot|can't|unable|no available tool|no tool|not equipped|unsupported|"
+    r"none of (?:the )?(?:provided|available) (?:functions|tools))\b",
     re.IGNORECASE,
 )
 GENERIC_NOOP = (
@@ -127,6 +128,18 @@ def _answer_is_correct(expected: AnswerExpected, response: str) -> bool:
     raise AssertionError("unreachable answer validator")
 
 
+def _answer_is_semantically_correct(expected: AnswerExpected, response: str) -> bool:
+    """Accept a validated atomic answer inside an otherwise natural response."""
+    validator = expected.validator
+    if isinstance(validator, ExactAnswerValidator):
+        if validator.case_sensitive:
+            return validator.value.strip() in response
+        return normalize_text(validator.value) in normalize_text(response)
+    if isinstance(validator, NormalizedTextAnswerValidator):
+        return normalize_text(validator.value) in normalize_text(response)
+    return _answer_is_correct(expected, response)
+
+
 def _mentions_missing_slot(expected: ClarifyExpected, response: str) -> bool:
     normalized = normalize_text(response).replace("_", " ")
     return any(slot.replace("_", " ") in normalized for slot in expected.missing_slots)
@@ -165,19 +178,27 @@ def evaluate_prediction(
         return EvaluationRecord(
             task_id=task.id,
             predicted_class=None,
+            behavior_correct=False,
+            semantic_correct=False,
+            protocol_correct=False,
             correct=False,
             reason_code="inference_error",
         )
     parsed = prediction.tool_call or parse_tool_call_text(prediction.raw_text)
     if parsed is not None:
-        correct = (
+        behavior_correct = task.label is DecisionClass.CALL
+        semantic_correct = (
             isinstance(task.expected, CallExpected)
             and parsed.name == task.expected.tool_name
             and parsed.arguments == task.expected.arguments
         )
+        correct = behavior_correct and semantic_correct
         return EvaluationRecord(
             task_id=task.id,
             predicted_class=DecisionClass.CALL,
+            behavior_correct=behavior_correct,
+            semantic_correct=semantic_correct,
+            protocol_correct=True,
             correct=correct,
             reason_code="correct_tool_call" if correct else "incorrect_tool_call",
             parsed_tool_call=parsed,
@@ -186,34 +207,50 @@ def evaluate_prediction(
         return EvaluationRecord(
             task_id=task.id,
             predicted_class=DecisionClass.CALL,
+            behavior_correct=task.label is DecisionClass.CALL,
+            semantic_correct=False,
+            protocol_correct=False,
             correct=False,
             reason_code="malformed_tool_call",
         )
     predicted_class = _classify_text(task, prediction.raw_text)
-    correct = False
+    behavior_correct = predicted_class is task.label
+    semantic_correct = False
     reason = "wrong_behavior"
-    if predicted_class is task.label:
+    if behavior_correct:
         if isinstance(task.expected, AnswerExpected):
-            correct = _answer_is_correct(task.expected, prediction.raw_text)
-            reason = "correct_answer" if correct else "incorrect_answer"
+            semantic_correct = _answer_is_semantically_correct(
+                task.expected, prediction.raw_text
+            )
+            reason = "correct_answer" if semantic_correct else "incorrect_answer"
         elif isinstance(task.expected, ClarifyExpected):
-            correct = _mentions_missing_slot(task.expected, prediction.raw_text)
-            reason = "correct_clarification" if correct else "incorrect_clarification"
+            semantic_correct = _mentions_missing_slot(
+                task.expected, prediction.raw_text
+            )
+            reason = (
+                "correct_clarification"
+                if semantic_correct
+                else "incorrect_clarification"
+            )
         elif isinstance(task.expected, RefuseExpected):
-            correct = bool(REFUSAL.search(prediction.raw_text))
-            reason = "correct_refusal" if correct else "incorrect_refusal"
+            semantic_correct = bool(REFUSAL.search(prediction.raw_text))
+            reason = "correct_refusal" if semantic_correct else "incorrect_refusal"
         elif isinstance(task.expected, NoopExpected):
             normalized = normalize_text(prediction.raw_text)
-            correct = any(
+            semantic_correct = any(
                 normalize_text(marker) in normalized
                 for marker in task.expected.allowed_markers
             )
-            reason = "correct_noop" if correct else "incorrect_noop"
+            reason = "correct_noop" if semantic_correct else "incorrect_noop"
     if predicted_class is None:
         reason = "empty_output"
+    correct = behavior_correct and semantic_correct
     return EvaluationRecord(
         task_id=task.id,
         predicted_class=predicted_class,
+        behavior_correct=behavior_correct,
+        semantic_correct=semantic_correct,
+        protocol_correct=bool(prediction.raw_text.strip()),
         correct=correct,
         reason_code=reason,
     )

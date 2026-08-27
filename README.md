@@ -46,9 +46,10 @@ future implementation and experiment session.
 **Phase 2 — baseline inference in progress.** The v1 300-pair data pipeline is
 complete. Controlled 0.5B prompt diagnostics and a pinned 1.5B capacity diagnostic
 have executed locally on Metal. The frozen 1.5B `native-full` baseline scored
-41.67% strict accuracy, 83.33% act accuracy, and 0% abstention accuracy on all 120
-validation tasks. Manual failure review identified both genuine unsafe calls and
-strict-text evaluator calibration gaps. Held-out test data remains untouched. See
+62.5% calibrated accuracy, 83.33% act accuracy, 41.67% abstention accuracy, and
+25% paired accuracy on all 120 validation tasks. The calibrated evaluator agrees
+with all 60 owner-verified adjudications across behavior, semantics, and protocol
+validity. Held-out test data remains untouched. See
 [`docs/12-baseline-diagnostics.md`](docs/12-baseline-diagnostics.md),
 [`docs/08-roadmap.md`](docs/08-roadmap.md) and
 [`docs/11-implementation-plan.md`](docs/11-implementation-plan.md).

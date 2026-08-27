@@ -19,11 +19,11 @@ The prompt variants are:
 | Model | Prompt | Accuracy | Act | Abstain | Paired | Hallucination | Peak GB |
 |---|---|---:|---:|---:|---:|---:|---:|
 | Qwen2.5 0.5B 4-bit | native-full | 0.00 | 0.00 | 0.00 | 0.00 | 0.75 | 0.87 |
-| Qwen2.5 0.5B 4-bit | embedded-tools | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.79 |
+| Qwen2.5 0.5B 4-bit | embedded-tools | 0.25 | 0.00 | 0.50 | 0.00 | 0.00 | 0.79 |
 | Qwen2.5 0.5B 4-bit | native-short | 0.00 | 0.00 | 0.00 | 0.00 | 1.00 | 0.84 |
-| Qwen2.5 1.5B 4-bit | native-full | 0.50 | 1.00 | 0.00 | 0.00 | 0.75 | 1.54 |
-| Qwen2.5 1.5B 4-bit | embedded-tools | 0.00 | 0.00 | 0.00 | 0.00 | 0.50 | 1.46 |
-| Qwen2.5 1.5B 4-bit | native-short | 0.50 | 1.00 | 0.00 | 0.00 | 0.75 | 1.50 |
+| Qwen2.5 1.5B 4-bit | native-full | 0.625 | 1.00 | 0.25 | 0.25 | 0.75 | 1.54 |
+| Qwen2.5 1.5B 4-bit | embedded-tools | 0.125 | 0.00 | 0.25 | 0.00 | 0.50 | 1.46 |
+| Qwen2.5 1.5B 4-bit | native-short | 0.625 | 1.00 | 0.25 | 0.25 | 0.75 | 1.50 |
 
 ## Decision
 
@@ -43,11 +43,14 @@ The frozen configuration was run on all 120 validation tasks (60 complete pairs)
 
 | Metric | Result |
 |---|---:|
-| Strict accuracy | 0.4167 |
-| Paired accuracy | 0.0000 |
+| Calibrated accuracy | 0.6250 |
+| Behavior accuracy | 0.6250 |
+| Semantic accuracy | 0.6250 |
+| Protocol compliance | 1.0000 |
+| Paired accuracy | 0.2500 |
 | Act accuracy | 0.8333 |
-| Abstention accuracy | 0.0000 |
-| Macro-F1 | 0.2579 |
+| Abstention accuracy | 0.4167 |
+| Macro-F1 | 0.4479 |
 | Abstention tool hallucination | 0.5833 |
 | Mean / median latency | 483 / 464 ms |
 | Peak Metal memory | 1.54 GB |
@@ -55,18 +58,14 @@ The frozen configuration was run on all 120 validation tasks (60 complete pairs)
 Domain accuracy was 50.0% for productivity and 37.5% each for finance and
 weather. There were no inference errors.
 
-All 70 strict failures were manually inspected, exceeding the planned 25-output
-audit. They fall into four repeated categories:
+The original strict evaluator produced 70 failures. A blinded 60-item calibration
+packet was AI-adjudicated and owner-verified. The calibrated evaluator has 100%
+agreement on behavior, semantics, and surface protocol validity for that packet.
+It leaves 45 substantive failures across the full validation split:
 
 - 35 genuine unsafe actions: the model called a tool on CLARIFY or NOOP tasks, or
   invented an unavailable calendar tool on productivity REFUSE tasks.
 - 10 genuine missed actions: finance and weather CALL tasks received unsupported
   direct answers instead of required state lookups.
-- 15 semantically correct direct answers rejected by exact answer formatting.
-- 10 semantically appropriate capability refusals classified as the wrong plain
-  text behavior by the current heuristic.
-
-The last two categories are evaluator-calibration candidates, not evidence that
-the model abstains reliably. The evaluator must be calibrated against human labels
-before training comparisons; raw outputs remain immutable so corrections do not
-require rerunning inference. Held-out test data remains untouched.
+The 15 natural-language direct answers and 10 capability refusals are now scored
+correctly. Raw outputs were not regenerated. Held-out test data remains untouched.

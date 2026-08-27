@@ -183,6 +183,11 @@ def answer_task_with(validator: object) -> TaskRecord:
     ("validator", "response", "correct"),
     [
         (ExactAnswerValidator(value="Paris", case_sensitive=True), "Paris", True),
+        (
+            ExactAnswerValidator(value="Paris", case_sensitive=True),
+            "The answer is Paris.",
+            True,
+        ),
         (ExactAnswerValidator(value="Paris", case_sensitive=True), "paris", False),
         (ExactAnswerValidator(value="Paris", case_sensitive=False), " PARIS! ", True),
         (NormalizedTextAnswerValidator(value="Café au lait"), "Café au lait.", True),
@@ -234,6 +239,15 @@ def test_numeric_answer_without_a_number_fails() -> None:
 
 def test_refusal_and_noop_require_expected_intent() -> None:
     refuse_task = pairs()[2].abstain
+    calibrated = evaluate_prediction(
+        refuse_task,
+        prediction(refuse_task, "None of the provided functions can do that."),
+    )
+    assert calibrated.predicted_class is DecisionClass.REFUSE
+    assert calibrated.behavior_correct
+    assert calibrated.semantic_correct
+    assert calibrated.protocol_correct
+    assert calibrated.correct
     assert not evaluate_prediction(
         refuse_task, prediction(refuse_task, "I do not want to do that.")
     ).correct

@@ -329,12 +329,19 @@ class EvaluationRecord(ContractModel):
 
     task_id: Slug
     predicted_class: DecisionClass | None
+    behavior_correct: bool
+    semantic_correct: bool
+    protocol_correct: bool
     correct: bool
     reason_code: Slug
     parsed_tool_call: ParsedToolCall | None = None
 
     @model_validator(mode="after")
     def validate_unclassified_result(self) -> "EvaluationRecord":
-        if self.predicted_class is None and self.correct:
+        if self.predicted_class is None and (
+            self.behavior_correct or self.semantic_correct or self.correct
+        ):
             raise ValueError("an unclassified prediction cannot be correct")
+        if self.correct != (self.behavior_correct and self.semantic_correct):
+            raise ValueError("correct must equal behavior_correct and semantic_correct")
         return self

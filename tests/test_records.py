@@ -371,6 +371,9 @@ def test_evaluation_record_contract() -> None:
     valid = EvaluationRecord(
         task_id="productivity-001-act",
         predicted_class=DecisionClass.CALL,
+        behavior_correct=True,
+        semantic_correct=True,
+        protocol_correct=True,
         correct=True,
         reason_code="correct_tool_call",
     )
@@ -381,8 +384,21 @@ def test_evaluation_record_contract() -> None:
         EvaluationRecord(
             task_id="productivity-001-act",
             predicted_class=None,
+            behavior_correct=True,
+            semantic_correct=True,
+            protocol_correct=True,
             correct=True,
             reason_code="parse_error",
+        )
+    with pytest.raises(ValidationError, match="correct must equal"):
+        EvaluationRecord(
+            task_id="productivity-001-act",
+            predicted_class=DecisionClass.CALL,
+            behavior_correct=True,
+            semantic_correct=False,
+            protocol_correct=True,
+            correct=True,
+            reason_code="inconsistent",
         )
 
 

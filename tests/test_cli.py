@@ -184,3 +184,31 @@ def test_calibration_commands(
         ]
     )
     assert '"cohen_kappa": 1.0' in capsys.readouterr().out
+    evaluation_output = tmp_path / "calibration-evaluation"
+    main(
+        [
+            "evaluate",
+            "--tasks",
+            str(task_path),
+            "--predictions",
+            str(prediction_path),
+            "--output",
+            str(evaluation_output),
+        ]
+    )
+    capsys.readouterr()
+    comparison = tmp_path / "comparison.json"
+    main(
+        [
+            "compare-calibration",
+            "--annotations",
+            str(completed),
+            "--evaluations",
+            str(evaluation_output / "evaluations.jsonl"),
+            "--output",
+            str(comparison),
+            *common,
+        ]
+    )
+    assert comparison.is_file()
+    assert '"item_count": 5' in capsys.readouterr().out

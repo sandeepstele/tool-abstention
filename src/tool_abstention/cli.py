@@ -10,6 +10,7 @@ from tool_abstention import __version__
 from tool_abstention.calibration import (
     agreement_summary,
     annotation_summary,
+    evaluator_agreement_summary,
     export_calibration_packet,
     load_annotations,
 )
@@ -30,7 +31,7 @@ from tool_abstention.productivity import (
     build_productivity_dataset,
     load_pairs,
 )
-from tool_abstention.records import PredictionRecord
+from tool_abstention.records import EvaluationRecord, PredictionRecord
 from tool_abstention.schemas import SchemaKind, export_schemas, validate_record
 from tool_abstention.util.jsonl import read_jsonl
 
@@ -104,6 +105,14 @@ def build_parser() -> argparse.ArgumentParser:
     agreement.add_argument("--first", required=True, type=Path)
     agreement.add_argument("--second", required=True, type=Path)
     agreement.add_argument("--mapping", required=True, type=Path)
+
+    compare = subparsers.add_parser(
+        "compare-calibration", help="compare verified labels with evaluator output"
+    )
+    compare.add_argument("--annotations", required=True, type=Path)
+    compare.add_argument("--mapping", required=True, type=Path)
+    compare.add_argument("--evaluations", required=True, type=Path)
+    compare.add_argument("--output", type=Path, default=None)
 
     infer = subparsers.add_parser("infer", help="run resumable local MLX inference")
     infer.add_argument("--config", required=True, type=Path)
@@ -182,6 +191,22 @@ def main(argv: Sequence[str] | None = None) -> None:
             first = load_annotations(args.first, expected_ids)
             second = load_annotations(args.second, expected_ids)
             print(json.dumps(agreement_summary(first, second), indent=2))
+            return
+        if args.command == "compare-calibration":
+            mapping = {
+                str(value["audit_id"]): str(value["task_id"])
+                for value in read_jsonl(args.mapping)
+            }
+            annotations = load_annotations(args.annotations, set(mapping))
+            evaluations = [
+                EvaluationRecord.model_validate(value)
+                for value in read_jsonl(args.evaluations)
+            ]
+            comparison = evaluator_agreement_summary(annotations, mapping, evaluations)
+            rendered = json.dumps(comparison, indent=2)
+            if args.output is not None:
+                args.output.write_text(rendered + "\n", encoding="utf-8")
+            print(rendered)
             return
         if args.command == "infer":
             inference_config = load_inference_config(args.config)

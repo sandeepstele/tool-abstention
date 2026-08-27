@@ -10,7 +10,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
-from tool_abstention.records import PredictionRecord, TaskRecord
+from tool_abstention.records import EvaluationRecord, PredictionRecord, TaskRecord
 from tool_abstention.taxonomy import DecisionClass
 from tool_abstention.util.hashing import canonical_json_bytes, sha256_object
 from tool_abstention.util.jsonl import write_jsonl
@@ -260,3 +260,63 @@ def agreement_summary(
             "cohen_kappa": _cohen_kappa(left, right),
         }
     return result
+
+
+def evaluator_agreement_summary(
+    annotations: list[HumanAnnotation],
+    mapping: dict[str, str],
+    evaluations: list[EvaluationRecord],
+) -> dict[str, Any]:
+    """Compare calibrated deterministic judgments with verified annotations."""
+    annotation_by_id = {row.audit_id: row for row in annotations}
+    evaluation_by_id = {row.task_id: row for row in evaluations}
+    if set(annotation_by_id) != set(mapping):
+        raise ValueError("annotations and mapping must contain the same audit ids")
+    if not set(mapping.values()).issubset(evaluation_by_id):
+        raise ValueError("evaluations are missing mapped calibration tasks")
+    disagreements: list[dict[str, str]] = []
+    behavior_matches = 0
+    semantic_matches = 0
+    protocol_matches = 0
+    for audit_id in sorted(mapping):
+        annotation = annotation_by_id[audit_id]
+        evaluation = evaluation_by_id[mapping[audit_id]]
+        predicted = (
+            evaluation.predicted_class.value
+            if evaluation.predicted_class is not None
+            else "UNCLEAR"
+        )
+        behavior_match = predicted == annotation.predicted_behavior.value
+        semantic_match = evaluation.correct == (
+            annotation.semantic_correctness is TernaryJudgment.YES
+        )
+        protocol_match = evaluation.protocol_correct == (
+            annotation.format_acceptable is BinaryJudgment.YES
+        )
+        behavior_matches += behavior_match
+        semantic_matches += semantic_match
+        protocol_matches += protocol_match
+        if not (behavior_match and semantic_match and protocol_match):
+            disagreements.append(
+                {
+                    "audit_id": audit_id,
+                    "task_id": mapping[audit_id],
+                    "axes": ",".join(
+                        axis
+                        for axis, matched in (
+                            ("behavior", behavior_match),
+                            ("semantic", semantic_match),
+                            ("protocol", protocol_match),
+                        )
+                        if not matched
+                    ),
+                }
+            )
+    count = len(annotations)
+    return {
+        "item_count": count,
+        "behavior_agreement": behavior_matches / count,
+        "semantic_agreement": semantic_matches / count,
+        "protocol_agreement": protocol_matches / count,
+        "disagreements": disagreements,
+    }
