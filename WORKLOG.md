@@ -733,3 +733,71 @@ and AgentAbstain external evaluation partitions out of training.
   was test scaffolding only, not production fetch behavior.
 - Final `make check` passed: Ruff formatting/lint clean, strict mypy clean over 35
   source files, and all 150 tests passed with 95.28% aggregate coverage.
+
+## 2026-08-27 — Milestone I: seed-0 SFT baseline
+
+### Data and implementation
+
+- Added strict SFT training configuration, deterministic five-class assistant-target
+  formatting, `build-sft` and `train-sft` commands, Make targets, adapter-aware
+  internal/external inference, and network-free fixture tests.
+- Exported 360 internal train and 120 validation examples. The exporter structurally
+  reads only `train.jsonl` and `validation.jsonl`; a fixture proves an invalid test
+  file is never opened. BFCL and AgentAbstain remain external-only.
+- Repeated export was byte-identical. After the final CLARIFY correction, train hash
+  is `a42910aa5db7b4525544e131fba09e304313a9b05616d905c26467bd5fd63d93`
+  and validation hash is
+  `b4c9b978b84b4edef12b1b481b29311864862fe8c1d99f86f8856f860c41b5f7`.
+- Resolved the configured model revision to a local immutable snapshot before
+  launching MLX because the installed LoRA CLI does not accept `revision` directly.
+- Real smoke exposed a Transformers 5 / mlx-lm 0.29 boundary: chat templates return
+  `BatchEncoding` rather than a flat token list. Added a narrow compatibility runner
+  that extracts `input_ids`, validates them, and retains prompt masking.
+
+### Training attempts and failures
+
+- The 0.5B/20-step Metal smoke completed. Validation loss fell 3.782 → 0.979;
+  adapter hash was `9fba9c2d9ffeb8fb937bfa65ca34ba28bb775ee4815933a7095f8812fd30eba9`;
+  peak memory was 2.04 GB.
+- Initial 1.5B batch-4 training reached step 75, then Metal OOMed at 19.30 GB. Its
+  step-45 checkpoint was preserved but not promoted.
+- Restarted with batch 2, accumulation 8, and gradient checkpointing. Effective
+  batch remained 16 and memory stabilized at 4.20 GB. This run reached the complete
+  step-180 first epoch before an intentional stop/interruption; its checkpoint was
+  evaluated diagnostically.
+- Diagnostic validation was 87.5% overall / 75% paired, but CLARIFY recall was 0%.
+  Raw outputs exactly matched the target `Please provide the missing <slot>.`; the
+  evaluator correctly classified this imperative as ANSWER rather than a question.
+- Corrected the target to `Could you provide the missing <slot>?`, regenerated data,
+  and restarted from the base model in a new directory. No checkpoint was overwritten.
+
+### Selected completed run and evaluation
+
+- Completed one epoch (180 microbatches) of corrected 1.5B SFT with seed 0. Full
+  validation loss ended at 0.005 and peak memory at 4.20 GB. Selected adapter hash:
+  `88841d6959a751cea2b60b88788b3552c283fc82acdfb9ce43ca08988a582556`.
+- Internal validation: 95.83% accuracy, 100% act accuracy, 91.67% abstention
+  accuracy, 91.67% paired accuracy, 95.2% macro-F1, 100% protocol compliance, and
+  8.33% abstention hallucination. All ANSWER, CLARIFY, and REFUSE examples passed;
+  five NOOP examples over-called.
+- Ran all 640 non-overlapping BFCL records with the selected adapter. Decision
+  accuracy was 93.59%, CALL 99.25%, ABSTAIN 84.17%, and balanced accuracy 91.71%.
+- Compared with base BFCL, balanced accuracy improved 6.88 points and ABSTAIN
+  accuracy improved 13.75 points without lowering CALL decision accuracy.
+- Malformed-call rate worsened from 3.91% to 11.56%. This protocol regression is a
+  real negative result and must be analyzed before DPO; it is not hidden by the
+  improved decision metric.
+- Refreshed inference manifests to include the exact adapter SHA-256. Raw adapter
+  weights and intermediate checkpoints remain ignored; predictions, evaluations,
+  metrics, and manifests are retained.
+
+### Verification and remaining gate
+
+- Final implementation gate before documentation: Ruff clean, strict mypy clean
+  over 38 source files, and all 157 tests passed at 95.01% aggregate coverage.
+- The internal held-out test split remains untouched.
+- Seed 0 is evidence, not a final multi-seed result. Next: classify malformed BFCL
+  calls, then repeat the frozen SFT recipe for seeds 1 and 2 before DPO.
+- After adapter-aware manifest hashing and its fixture regression test, the final
+  gate passed with all 157 tests and 95.02% aggregate coverage; Ruff and strict
+  mypy remained clean.

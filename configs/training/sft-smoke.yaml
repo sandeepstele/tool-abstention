@@ -1,0 +1,17 @@
+model: mlx-community/Qwen2.5-0.5B-Instruct-4bit
+revision: 53a32aee5e9447773fd2b85988395066aef3700a
+seed: 0
+batch_size: 1
+grad_accumulation_steps: 1
+iters: 20
+learning_rate: 0.0001
+num_layers: 4
+max_seq_length: 1024
+val_batches: 2
+steps_per_report: 1
+steps_per_eval: 10
+save_every: 10
+rank: 8
+dropout: 0.0
+scale: 16.0
+mask_prompt: true

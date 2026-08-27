@@ -1,0 +1,1 @@
+{"abstain_accuracy":0.8416666666666667,"balanced_accuracy":0.9170833333333334,"call_accuracy":0.9925,"decision_accuracy":0.9359375,"evaluator_version":"1.0.0","malformed_call_rate":0.115625,"per_category":{"irrelevance":0.8416666666666667,"simple":0.9925},"task_count":640,"tool_call_rate":0.6796875}

@@ -42,6 +42,7 @@ from tool_abstention.productivity import (
 )
 from tool_abstention.records import EvaluationRecord, PredictionRecord
 from tool_abstention.schemas import SchemaKind, export_schemas, validate_record
+from tool_abstention.sft import build_sft_dataset, run_sft_training
 from tool_abstention.util.hashing import (
     canonical_json_bytes,
     sha256_file,
@@ -86,6 +87,19 @@ def build_parser() -> argparse.ArgumentParser:
     )
     full.add_argument("--config", required=True, type=Path)
     full.add_argument("--output", required=True, type=Path)
+
+    sft_data = subparsers.add_parser(
+        "build-sft", help="export internal train/validation records for MLX SFT"
+    )
+    sft_data.add_argument("--internal", required=True, type=Path)
+    sft_data.add_argument("--output", required=True, type=Path)
+
+    sft_train = subparsers.add_parser(
+        "train-sft", help="train a pinned MLX LoRA adapter"
+    )
+    sft_train.add_argument("--config", required=True, type=Path)
+    sft_train.add_argument("--data", required=True, type=Path)
+    sft_train.add_argument("--output", required=True, type=Path)
 
     fetch = subparsers.add_parser(
         "fetch-external", help="fetch pinned external benchmark snapshots"
@@ -149,6 +163,7 @@ def build_parser() -> argparse.ArgumentParser:
     external_infer.add_argument("--records", required=True, type=Path)
     external_infer.add_argument("--output", required=True, type=Path)
     external_infer.add_argument("--limit", type=int, default=None)
+    external_infer.add_argument("--adapter-path", type=Path, default=None)
 
     external_eval = subparsers.add_parser(
         "evaluate-external", help="score stored external decision predictions"
@@ -164,6 +179,7 @@ def build_parser() -> argparse.ArgumentParser:
     infer.add_argument("--limit", type=int, default=None)
     infer.add_argument("--stratified-smoke", action="store_true")
     infer.add_argument("--prompt-variant", choices=tuple(PromptVariant), default=None)
+    infer.add_argument("--adapter-path", type=Path, default=None)
     return parser
 
 
@@ -198,6 +214,14 @@ def main(argv: Sequence[str] | None = None) -> None:
                 f"generated {manifest['pair_count']} pairs / "
                 f"{manifest['task_count']} tasks in {args.output}"
             )
+            return
+        if args.command == "build-sft":
+            manifest = build_sft_dataset(args.internal, args.output)
+            print(json.dumps(manifest, indent=2))
+            return
+        if args.command == "train-sft":
+            manifest = run_sft_training(args.config, args.data, args.output)
+            print(json.dumps(manifest, indent=2))
             return
         if args.command == "fetch-external":
             fetched = fetch_external(args.config, args.output)
@@ -263,6 +287,10 @@ def main(argv: Sequence[str] | None = None) -> None:
             return
         if args.command == "infer-external":
             external_config = load_inference_config(args.config)
+            if args.adapter_path is not None:
+                external_config = external_config.model_copy(
+                    update={"adapter_path": str(args.adapter_path)}
+                )
             records = [
                 ExternalDecisionRecord.model_validate(value)
                 for value in read_jsonl(args.records)
@@ -295,6 +323,13 @@ def main(argv: Sequence[str] | None = None) -> None:
                 "schema_version": 1,
                 "model": external_config.model,
                 "revision": external_config.revision,
+                "adapter_hash": (
+                    sha256_file(
+                        Path(external_config.adapter_path) / "adapters.safetensors"
+                    )
+                    if external_config.adapter_path is not None
+                    else None
+                ),
                 "prompt_variant": external_config.prompt_variant,
                 "record_ids_hash": sha256_object([example.id for example in selected]),
                 "records_hash": sha256_file(args.records),
@@ -335,6 +370,10 @@ def main(argv: Sequence[str] | None = None) -> None:
             if args.prompt_variant is not None:
                 inference_config = inference_config.model_copy(
                     update={"prompt_variant": PromptVariant(args.prompt_variant)}
+                )
+            if args.adapter_path is not None:
+                inference_config = inference_config.model_copy(
+                    update={"adapter_path": str(args.adapter_path)}
                 )
             inference_tasks = load_tasks(args.tasks)
             if args.stratified_smoke:

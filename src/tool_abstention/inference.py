@@ -35,6 +35,7 @@ class InferenceConfig(BaseModel):
     prompt_variant: "PromptVariant" = Field(
         default_factory=lambda: PromptVariant.NATIVE_FULL
     )
+    adapter_path: str | None = None
 
 
 class PromptVariant(StrEnum):
@@ -147,6 +148,7 @@ class MlxBackend:
         loaded = load(
             config.model,
             revision=config.revision,
+            adapter_path=config.adapter_path,
             tokenizer_config={"trust_remote_code": False},
             return_config=False,
         )
@@ -333,6 +335,9 @@ def write_run_manifest(
     prediction_path: Path,
 ) -> Path:
     """Write deterministic inference provenance beside predictions."""
+    adapter_hash = None
+    if config.adapter_path is not None:
+        adapter_hash = sha256_file(Path(config.adapter_path) / "adapters.safetensors")
     manifest = {
         "schema_version": 1,
         "model": config.model,
@@ -341,6 +346,7 @@ def write_run_manifest(
         "max_tokens": config.max_tokens,
         "temperature": config.temperature,
         "prompt_variant": config.prompt_variant,
+        "adapter_hash": adapter_hash,
         "task_count": len(tasks),
         "task_ids_hash": sha256_object([task.id for task in tasks]),
         "prompt_policy_hash": sha256_object(prompt_policy(config.prompt_variant)),

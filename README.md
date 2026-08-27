@@ -38,6 +38,7 @@ All planning lives in [`docs/`](docs/). Read in order:
 | 11 | [implementation-plan.md](docs/11-implementation-plan.md) | Build order, interfaces, verification, deliverables |
 | 12 | [baseline-diagnostics.md](docs/12-baseline-diagnostics.md) | Local model and evaluator calibration evidence |
 | 13 | [external-data.md](docs/13-external-data.md) | BFCL provenance, leakage controls, and baseline results |
+| 14 | [sft-baseline.md](docs/14-sft-baseline.md) | SFT training evidence, results, and failure analysis |
 
 Engineering activity and decisions are recorded in [`WORKLOG.md`](WORKLOG.md). The
 logging convention is defined in the implementation plan and applies to every
@@ -45,7 +46,7 @@ future implementation and experiment session.
 
 ## Status
 
-**Phase 2 — baseline inference and external validation complete.** The v1 300-pair data pipeline is
+**Phase 2 — SFT baseline complete for seed 0.** The v1 300-pair data pipeline is
 complete. Controlled 0.5B prompt diagnostics and a pinned 1.5B capacity diagnostic
 have executed locally on Metal. The frozen 1.5B `native-full` baseline scored
 62.5% calibrated accuracy, 83.33% act accuracy, 41.67% abstention accuracy, and
@@ -73,6 +74,10 @@ make baseline-validation
 make external-fetch       # networked, one-time pinned snapshots
 make external-prepare     # network-free normalization and leakage audit
 make external-baseline    # local Metal inference + stored evaluation
+make sft-data             # internal train/validation only
+make sft-smoke            # 0.5B/20-step Metal training check
+make sft-train            # 1.5B seed-0 LoRA training
+make sft-validation       # adapter-aware internal validation
 uv run python -m tool_abstention --help
 uv run tool-abstention validate-config configs/project.yaml
 uv run tool-abstention export-schemas /tmp/tool-abstention-schemas

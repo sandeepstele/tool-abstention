@@ -24,6 +24,7 @@ build/
 /checkpoints/
 results/**/*.png
 results/**/*.safetensors
+/results/sft/1.5b/seed-0/
 
 # Editors and operating systems
 .DS_Store

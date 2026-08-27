@@ -1,4 +1,4 @@
-.PHONY: setup data external-fetch external-prepare external-baseline baseline-smoke prompt-diagnostic capacity-diagnostic baseline-validation lint typecheck test check
+.PHONY: setup data sft-data sft-smoke sft-train sft-validation external-fetch external-prepare external-baseline baseline-smoke prompt-diagnostic capacity-diagnostic baseline-validation lint typecheck test check
 
 setup:
 	uv sync --locked
@@ -7,6 +7,34 @@ data:
 	uv run tool-abstention generate-dataset \
 		--config configs/data/full.yaml \
 		--output data/processed
+
+sft-data: data
+	uv run tool-abstention build-sft \
+		--internal data/processed \
+		--output data/training/sft
+
+sft-smoke: sft-data
+	uv run --group inference tool-abstention train-sft \
+		--config configs/training/sft-smoke.yaml \
+		--data data/training/sft \
+		--output checkpoints/sft-smoke/seed-0
+
+sft-train: sft-data
+	uv run --group inference tool-abstention train-sft \
+		--config configs/training/sft-1.5b.yaml \
+		--data data/training/sft \
+		--output checkpoints/sft/1.5b/seed-0-v2
+
+sft-validation:
+	uv run --group inference tool-abstention infer \
+		--config configs/models/qwen-1.5b-diagnostic.yaml \
+		--adapter-path checkpoints/sft/1.5b/seed-0-v2 \
+		--tasks data/processed/validation.jsonl \
+		--output results/sft/1.5b/seed-0-v2/validation/predictions.jsonl
+	uv run tool-abstention evaluate \
+		--tasks data/processed/validation.jsonl \
+		--predictions results/sft/1.5b/seed-0-v2/validation/predictions.jsonl \
+		--output results/sft/1.5b/seed-0-v2/validation
 
 external-fetch:
 	uv run --group external-data tool-abstention fetch-external \

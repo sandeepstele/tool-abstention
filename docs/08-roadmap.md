@@ -9,13 +9,15 @@ canonical contracts, executable tools, deterministic evaluation, grouped 60/20/2
 splits, test hashing, and the full manifest are implemented. The larger 600-pair
 roadmap target remains a pre-final-experiment expansion goal.
 
-**Phase 2 — baseline inference: complete.** The pinned 1.5B MLX model completed
+**Phase 2 — SFT baseline: seed 0 complete.** The pinned 1.5B MLX model completed
 internal validation and the 640-record non-overlapping BFCL external decision
 benchmark on Metal. Evaluator calibration agrees with all 60 owner-verified
 adjudications. Raw outputs, manifests, metrics, and limitations are retained.
 
-**Next gate:** build SFT records and train the first 1.5B adapter. Public benchmark
-records remain evaluation-only, and the internal held-out test split remains sealed.
+The first corrected one-epoch SFT adapter reached 95.83% internal validation
+accuracy and 91.71% BFCL balanced accuracy. **Next gate:** repeat SFT with seeds 1
+and 2, analyze malformed external calls, then freeze the SFT comparison before DPO.
+Public benchmark records remain evaluation-only, and the held-out test stays sealed.
 
 ---
 

@@ -173,8 +173,16 @@ def test_run_manifest_records_pinned_provenance(tmp_path: Path) -> None:
     task = act_task()
     prediction_path = tmp_path / "predictions.jsonl"
     run_inference([task], FakeBackend(), prediction_path)
+    adapter = tmp_path / "adapter"
+    adapter.mkdir()
+    (adapter / "adapters.safetensors").write_bytes(b"adapter")
     config = InferenceConfig(
-        model="local/model", revision="a" * 40, seed=0, max_tokens=32, temperature=0
+        model="local/model",
+        revision="a" * 40,
+        seed=0,
+        max_tokens=32,
+        temperature=0,
+        adapter_path=str(adapter),
     )
     path = write_run_manifest(config, [task], prediction_path)
     content = path.read_text(encoding="utf-8")
@@ -182,6 +190,7 @@ def test_run_manifest_records_pinned_provenance(tmp_path: Path) -> None:
     assert '"predictions_hash"' in content
     assert '"prompt_variant":"native-full"' in content
     assert '"rendered_prompts_hash"' in content
+    assert '"adapter_hash"' in content
 
 
 def test_stratified_smoke_selects_four_complete_classes() -> None:
