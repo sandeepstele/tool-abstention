@@ -6,8 +6,10 @@ import pytest
 
 from tool_abstention.inference import (
     InferenceConfig,
+    PromptVariant,
     load_inference_config,
     load_tasks,
+    prompt_policy,
     run_inference,
     select_stratified_smoke,
     task_messages,
@@ -49,6 +51,20 @@ def test_task_messages_include_state_request_and_policy() -> None:
     assert "Never invent" in messages[0]["content"]
     assert '"tickets"' in messages[1]["content"]
     assert "Close ticket 7" in messages[1]["content"]
+
+
+def test_prompt_variants_are_distinct_and_embed_tools_canonically() -> None:
+    task = act_task()
+    short = task_messages(task, PromptVariant.NATIVE_SHORT)
+    embedded = task_messages(task, PromptVariant.EMBEDDED_TOOLS)
+    assert short[0]["content"] != task_messages(task)[0]["content"]
+    assert "Available tools (JSON):" in embedded[0]["content"]
+    assert '"name":"close_ticket"' in embedded[0]["content"]
+    assert (
+        '<tool_call>{"name":"tool_name","arguments":{}}</tool_call>'
+        in embedded[0]["content"]
+    )
+    assert "{tools}" in prompt_policy(PromptVariant.EMBEDDED_TOOLS)
 
 
 def test_run_inference_resumes_and_preserves_order(tmp_path: Path) -> None:
@@ -119,6 +135,8 @@ def test_run_manifest_records_pinned_provenance(tmp_path: Path) -> None:
     content = path.read_text(encoding="utf-8")
     assert '"revision":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"' in content
     assert '"predictions_hash"' in content
+    assert '"prompt_variant":"native-full"' in content
+    assert '"rendered_prompts_hash"' in content
 
 
 def test_stratified_smoke_selects_four_complete_classes() -> None:

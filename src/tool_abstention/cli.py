@@ -11,6 +11,7 @@ from tool_abstention.dataset import build_full_dataset
 from tool_abstention.harness import evaluate_files
 from tool_abstention.inference import (
     MlxBackend,
+    PromptVariant,
     load_inference_config,
     load_tasks,
     run_inference,
@@ -80,6 +81,7 @@ def build_parser() -> argparse.ArgumentParser:
     infer.add_argument("--output", required=True, type=Path)
     infer.add_argument("--limit", type=int, default=None)
     infer.add_argument("--stratified-smoke", action="store_true")
+    infer.add_argument("--prompt-variant", choices=tuple(PromptVariant), default=None)
     return parser
 
 
@@ -124,6 +126,10 @@ def main(argv: Sequence[str] | None = None) -> None:
             return
         if args.command == "infer":
             inference_config = load_inference_config(args.config)
+            if args.prompt_variant is not None:
+                inference_config = inference_config.model_copy(
+                    update={"prompt_variant": PromptVariant(args.prompt_variant)}
+                )
             inference_tasks = load_tasks(args.tasks)
             if args.stratified_smoke:
                 inference_tasks = select_stratified_smoke(inference_tasks)

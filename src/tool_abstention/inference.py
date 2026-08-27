@@ -4,6 +4,7 @@ import json
 import os
 import time
 from collections.abc import Sequence
+from enum import StrEnum
 from pathlib import Path
 from typing import Any, Protocol, cast
 
@@ -31,6 +32,17 @@ class InferenceConfig(BaseModel):
     seed: int = Field(ge=0, le=2**32 - 1)
     max_tokens: int = Field(gt=0, le=2048)
     temperature: float = Field(default=0, ge=0)
+    prompt_variant: "PromptVariant" = Field(
+        default_factory=lambda: PromptVariant.NATIVE_FULL
+    )
+
+
+class PromptVariant(StrEnum):
+    """Controlled prompt strategies used by the baseline diagnostic."""
+
+    NATIVE_FULL = "native-full"
+    EMBEDDED_TOOLS = "embedded-tools"
+    NATIVE_SHORT = "native-short"
 
 
 class InferenceBackend(Protocol):
@@ -47,6 +59,15 @@ SYSTEM_PROMPT = """You are a tool-use decision agent. Choose exactly one behavio
 - State that no action is needed when the environment shows the task is complete.
 Never invent a tool, argument, or result."""
 
+SHORT_SYSTEM_PROMPT = """Call one visible tool only when it is necessary and all
+required arguments are present. Otherwise answer, clarify, refuse, or state that no
+action is needed. Never invent tools or arguments."""
+
+EMBEDDED_TOOL_INSTRUCTION = """Available tools (JSON): {tools}
+When a tool is necessary, output exactly
+<tool_call>{\"name\":\"tool_name\",\"arguments\":{}}</tool_call>.
+Otherwise respond directly with no tool-call tags."""
+
 
 def _openai_tool(tool: ToolDefinition) -> dict[str, Any]:
     return {
@@ -59,7 +80,10 @@ def _openai_tool(tool: ToolDefinition) -> dict[str, Any]:
     }
 
 
-def task_messages(task: TaskRecord) -> list[dict[str, str]]:
+def task_messages(
+    task: TaskRecord,
+    variant: PromptVariant = PromptVariant.NATIVE_FULL,
+) -> list[dict[str, str]]:
     """Build the stable system/user messages for one canonical task."""
     context = json.dumps(
         task.environment,
@@ -67,13 +91,33 @@ def task_messages(task: TaskRecord) -> list[dict[str, str]]:
         sort_keys=True,
         separators=(",", ":"),
     )
+    system_prompt = (
+        SHORT_SYSTEM_PROMPT if variant is PromptVariant.NATIVE_SHORT else SYSTEM_PROMPT
+    )
+    if variant is PromptVariant.EMBEDDED_TOOLS:
+        serialized_tools = canonical_json_bytes(
+            [_openai_tool(tool) for tool in task.tools]
+        ).decode("utf-8")
+        system_prompt = (
+            f"{system_prompt}\n\n"
+            f"{EMBEDDED_TOOL_INSTRUCTION.replace('{tools}', serialized_tools)}"
+        )
     return [
-        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": system_prompt},
         {
             "role": "user",
             "content": f"Environment state: {context}\n\nRequest: {task.query}",
         },
     ]
+
+
+def prompt_policy(variant: PromptVariant) -> str:
+    """Return only the stable policy text, excluding task-specific content."""
+    if variant is PromptVariant.NATIVE_SHORT:
+        return SHORT_SYSTEM_PROMPT
+    if variant is PromptVariant.EMBEDDED_TOOLS:
+        return f"{SYSTEM_PROMPT}\n\n{EMBEDDED_TOOL_INSTRUCTION}"
+    return SYSTEM_PROMPT
 
 
 class MlxBackend:
@@ -97,13 +141,15 @@ class MlxBackend:
 
     def predict(self, task: TaskRecord) -> PredictionRecord:
         """Generate one greedy prediction and capture cost metadata."""
-        tools = [_openai_tool(tool) for tool in task.tools]
+        template_arguments: dict[str, Any] = {
+            "add_generation_prompt": True,
+            "tokenize": False,
+            "enable_thinking": False,
+        }
+        if self.config.prompt_variant is not PromptVariant.EMBEDDED_TOOLS:
+            template_arguments["tools"] = [_openai_tool(tool) for tool in task.tools]
         prompt = self._tokenizer.apply_chat_template(
-            task_messages(task),
-            tools=tools,
-            add_generation_prompt=True,
-            tokenize=False,
-            enable_thinking=False,
+            task_messages(task, self.config.prompt_variant), **template_arguments
         )
         if not isinstance(prompt, str):
             raise TypeError("chat template must return text when tokenize=False")
@@ -229,9 +275,13 @@ def write_run_manifest(
         "seed": config.seed,
         "max_tokens": config.max_tokens,
         "temperature": config.temperature,
+        "prompt_variant": config.prompt_variant,
         "task_count": len(tasks),
         "task_ids_hash": sha256_object([task.id for task in tasks]),
-        "prompt_policy_hash": sha256_object(SYSTEM_PROMPT),
+        "prompt_policy_hash": sha256_object(prompt_policy(config.prompt_variant)),
+        "rendered_prompts_hash": sha256_object(
+            [task_messages(task, config.prompt_variant) for task in tasks]
+        ),
         "predictions_hash": sha256_file(prediction_path),
     }
     path = prediction_path.with_name("run_manifest.json")

@@ -463,3 +463,59 @@ is documented as it happens.
 
 Implement Milestone A from `docs/11-implementation-plan.md`: repository foundation,
 configuration validation, deterministic utilities, tests, and CPU-only CI.
+## 2026-08-26 — Diagnose baseline prompts and model capacity
+
+### Objective
+
+Determine whether the failed 0.5B smoke baseline came from prompt formatting,
+strict parsing, or insufficient model capacity before running full validation.
+
+### Changes and decisions
+
+- Added strict `native-full`, `embedded-tools`, and `native-short` prompt variants.
+- Added CLI prompt selection and task-specific plus policy-only prompt hashes to
+  each run manifest.
+- Kept the evaluator and parser unchanged; malformed braces were not repaired.
+- Added reproducible 0.5B prompt and pinned 1.5B capacity diagnostic targets.
+- Pinned Qwen2.5-1.5B-Instruct-4bit revision
+  `8b403126fc14f14cfc99bb4cfa72ecbc129ea677` after a read-only remote lookup.
+- Froze `native-full` for full validation: it ties for best strict accuracy and
+  retains the complete decision policy.
+
+### Commands and outcomes
+
+- The first sandboxed `uv` command could not read the external cache; the approved
+  retry used the existing cache.
+- The first `make check` found two long prompt lines. After wrapping them, pytest
+  caught literal JSON braces being interpreted by `str.format`; replacing only the
+  `{tools}` marker fixed the defect.
+- The corrected `make check` passed Ruff, strict mypy over 31 source files, and 130
+  tests with 95.94% coverage.
+- `make prompt-diagnostic` ran 24 predictions with the cached 0.5B model and no
+  inference errors. All variants scored 0% strict accuracy. Native-full and
+  native-short hallucinated tools on 75% and 100% of abstention cases;
+  embedded-tools made no required calls and had 0% tool hallucination.
+- `make capacity-diagnostic` downloaded the pinned approximately 869 MB 1.5B model
+  and ran 24 predictions locally on Metal with no inference errors. Native-full
+  and native-short scored 50% strict accuracy, 100% act accuracy, 0% abstention
+  accuracy, 0% paired accuracy, and 75% abstention tool hallucination. Native-full
+  peaked at 1.54 GB Metal memory and averaged 592 ms per example.
+- Embedded-tools at 1.5B scored 0% strict accuracy with 50% abstention tool
+  hallucination. It was not selected.
+- `make baseline-validation` ran the frozen 1.5B/native-full configuration on all
+  120 validation tasks. It completed with no inference errors: 41.67% strict
+  accuracy, 0% paired accuracy, 83.33% act accuracy, 0% abstention accuracy,
+  25.79% macro-F1, and 58.33% abstention tool hallucination. Mean/median latency
+  was 483/464 ms and peak Metal memory was 1.54 GB.
+- Domain accuracy was 50.0% productivity, 37.5% finance, and 37.5% weather.
+- Manually inspected all 70 strict failures: 35 unsafe tool calls, 10 missed
+  required calls, 15 semantically correct but exact-format-mismatched answers, and
+  10 semantically appropriate refusals missed by the plain-text classifier.
+
+### Unresolved issues and next action
+
+- MLX emits a deprecation warning for `mx.metal.device_info`; it originates in the
+  pinned dependency and does not affect results.
+- Calibrate answer and refusal judgments against stratified human labels, add
+  regression cases for accepted corrections, and re-evaluate the stored baseline
+  without rerunning the model. Do not inspect the held-out test split yet.

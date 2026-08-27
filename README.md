@@ -44,9 +44,12 @@ future implementation and experiment session.
 ## Status
 
 **Phase 2 — baseline inference in progress.** The v1 300-pair data pipeline is
-complete, and the pinned Qwen2.5-0.5B MLX smoke run has executed locally on Metal.
-The smoke result is intentionally retained: 0% strict accuracy and 75% abstention
-tool-hallucination over four stratified pairs. Full validation is next. See
+complete. Controlled 0.5B prompt diagnostics and a pinned 1.5B capacity diagnostic
+have executed locally on Metal. The frozen 1.5B `native-full` baseline scored
+41.67% strict accuracy, 83.33% act accuracy, and 0% abstention accuracy on all 120
+validation tasks. Manual failure review identified both genuine unsafe calls and
+strict-text evaluator calibration gaps. Held-out test data remains untouched. See
+[`docs/12-baseline-diagnostics.md`](docs/12-baseline-diagnostics.md),
 [`docs/08-roadmap.md`](docs/08-roadmap.md) and
 [`docs/11-implementation-plan.md`](docs/11-implementation-plan.md).
 
@@ -60,6 +63,9 @@ make setup
 make check
 make data
 make baseline-smoke
+make prompt-diagnostic
+make capacity-diagnostic
+make baseline-validation
 uv run python -m tool_abstention --help
 uv run tool-abstention validate-config configs/project.yaml
 uv run tool-abstention export-schemas /tmp/tool-abstention-schemas
@@ -91,6 +97,8 @@ abstention accuracy, hallucination rate, and per-class metrics.
 
 The smoke model is pinned to
 `mlx-community/Qwen2.5-0.5B-Instruct-4bit@53a32aee5e9447773fd2b85988395066aef3700a`.
+The capacity diagnostic pins
+`mlx-community/Qwen2.5-1.5B-Instruct-4bit@8b403126fc14f14cfc99bb4cfa72ecbc129ea677`.
 MLX dependencies are isolated in the `inference` dependency group, and CPU-only CI
 does not import or download them.
 
