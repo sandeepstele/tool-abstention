@@ -1,5 +1,7 @@
 """Tests for deterministic internal-only SFT preparation and launch."""
 
+import sys
+import types
 from pathlib import Path
 
 import pytest
@@ -177,7 +179,11 @@ def test_training_launcher_resolves_revision_and_records_adapter(
         adapter = Path(command[command.index("--adapter-path") + 1])
         (adapter / "adapters.safetensors").write_bytes(b"adapter")
 
-    monkeypatch.setattr("huggingface_hub.snapshot_download", fake_snapshot_download)
+    fake_hub = types.ModuleType("huggingface_hub")
+    monkeypatch.setattr(
+        fake_hub, "snapshot_download", fake_snapshot_download, raising=False
+    )
+    monkeypatch.setitem(sys.modules, "huggingface_hub", fake_hub)
     monkeypatch.setattr("tool_abstention.sft.subprocess.run", fake_run)
     output = tmp_path / "adapter"
     manifest = run_sft_training(config_path, data_path, output)
