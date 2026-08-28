@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="390" viewBox="0 0 1100 390" role="img" aria-labelledby="title desc">
+  <title id="title">Tool abstention research pipeline</title>
+  <desc id="desc">Internal paired data flows through SFT and guarded preference experiments into deterministic internal and external evaluation, then a hashed offline report.</desc>
+  <rect width="1100" height="390" rx="18" fill="#f8fafc"/>
+  <defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#475569"/></marker></defs>
+  <style>.box{fill:#fff;stroke:#94a3b8;stroke-width:2}.selected{fill:#eff6ff;stroke:#2563eb;stroke-width:3}.rejected{fill:#fff7ed;stroke:#ea580c;stroke-width:2}.external{fill:#f0fdf4;stroke:#16a34a;stroke-width:2}.t{font:600 17px system-ui,sans-serif;fill:#0f172a}.s{font:13px system-ui,sans-serif;fill:#475569}.a{stroke:#475569;stroke-width:2;fill:none;marker-end:url(#arrow)}</style>
+  <rect class="box" x="30" y="70" width="205" height="105" rx="12"/><text class="t" x="50" y="105">Paired internal data</text><text class="s" x="50" y="132">300 pairs · 5 decisions</text><text class="s" x="50" y="154">train/validation/test guards</text>
+  <rect class="selected" x="315" y="35" width="210" height="105" rx="12"/><text class="t" x="337" y="72">1.5B LoRA SFT</text><text class="s" x="337" y="100">3 seeds · selected</text><text class="s" x="337" y="122">94.72% internal mean</text>
+  <rect class="rejected" x="315" y="205" width="210" height="115" rx="12"/><text class="t" x="337" y="240">Guarded DPO branch</text><text class="s" x="337" y="268">fixed-vector math tests</text><text class="s" x="337" y="290">behavior gates failed</text><text class="s" x="337" y="312">negative result retained</text>
+  <rect class="box" x="610" y="35" width="210" height="105" rx="12"/><text class="t" x="632" y="72">Internal evaluator</text><text class="s" x="632" y="100">rule-based 5-class score</text><text class="s" x="632" y="122">60-item human calibration</text>
+  <rect class="external" x="610" y="205" width="210" height="115" rx="12"/><text class="t" x="632" y="240">External BFCL</text><text class="s" x="632" y="268">640 non-overlap records</text><text class="s" x="632" y="290">evaluation only</text><text class="s" x="632" y="312">never used for training</text>
+  <rect class="box" x="895" y="105" width="175" height="140" rx="12"/><text class="t" x="917" y="142">Offline report</text><text class="s" x="917" y="170">paired bootstrap</text><text class="s" x="917" y="192">three-seed intervals</text><text class="s" x="917" y="214">SHA-256 manifest</text>
+  <path class="a" d="M235 115 H315"/><path class="a" d="M235 145 C275 145 275 260 315 260"/><path class="a" d="M525 85 H610"/><path class="a" d="M525 250 H610"/><path class="a" d="M820 85 C865 85 850 150 895 150"/><path class="a" d="M820 260 C865 260 850 210 895 210"/>
+</svg>

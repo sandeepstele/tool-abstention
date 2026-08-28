@@ -22,3 +22,5 @@ jobs:
         run: uv sync --locked
       - name: Run checks
         run: make check
+      - name: Verify release hash chain
+        run: make release-audit

@@ -1,5 +1,6 @@
 """Tests for deterministic final analysis."""
 
+import json
 from pathlib import Path
 
 import pytest
@@ -7,6 +8,7 @@ import yaml
 
 from tool_abstention.analysis import (
     FinalAnalysisConfig,
+    audit_final_release,
     build_final_analysis,
     mean_ci95,
     paired_bootstrap_ci,
@@ -157,3 +159,117 @@ def test_analysis_reports_missing_and_duplicate_rows(tmp_path: Path) -> None:
     )
     with pytest.raises(ValueError, match="duplicate evaluation"):
         build_final_analysis(config, tmp_path / "output")
+
+
+def test_release_audit_verifies_hash_chain(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    for relative in (
+        "LICENSE",
+        "README.md",
+        "uv.lock",
+        ".github/workflows/ci.yml",
+        "assets/architecture.svg",
+        "assets/result-summary.svg",
+        "docs/26-final-analysis.md",
+        "docs/engineering-article.md",
+    ):
+        path = tmp_path / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("release\n", encoding="utf-8")
+    config = _config(tmp_path)
+    config_value = yaml.safe_load(config.read_text(encoding="utf-8"))
+    assert isinstance(config_value, dict)
+    experiments = config_value["experiments"]
+    assert isinstance(experiments, list)
+    for experiment in experiments:
+        assert isinstance(experiment, dict)
+        experiment["metrics"] = Path(str(experiment["metrics"])).name
+        experiment["evaluations"] = Path(str(experiment["evaluations"])).name
+    canonical_config = tmp_path / "configs/analysis/final.yaml"
+    canonical_config.parent.mkdir(parents=True)
+    canonical_config.write_text(
+        yaml.safe_dump(config_value, sort_keys=True), encoding="utf-8"
+    )
+    monkeypatch.chdir(tmp_path)
+    build_final_analysis(canonical_config, tmp_path / "reports/final")
+    report = audit_final_release(tmp_path)
+    assert report["status"] == "pass"
+    assert report["verified_artifacts"] == 5
+    assert report["verified_inputs"] == 6
+    (tmp_path / "reports/final/comparison.md").write_text("tampered\n")
+    with pytest.raises(ValueError, match="artifact hash mismatch"):
+        audit_final_release(tmp_path)
+
+    build_final_analysis(canonical_config, tmp_path / "reports/final")
+    manifest_path = tmp_path / "reports/final/manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["artifacts"] = {}
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    with pytest.raises(ValueError, match="no artifacts"):
+        audit_final_release(tmp_path)
+
+    build_final_analysis(canonical_config, tmp_path / "reports/final")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["config_sha256"] = "0" * 64
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    with pytest.raises(ValueError, match="config hash mismatch"):
+        audit_final_release(tmp_path)
+
+
+@pytest.mark.parametrize(
+    ("summary_update", "message"),
+    [
+        ({"held_out_test_opened": True}, "test stayed sealed"),
+        ({"external_data_used_for_training": True}, "external benchmark"),
+        ({"inputs": []}, "no input provenance"),
+        ({"inputs": ["bad"]}, "invalid release input entry"),
+        ({"inputs": [{"path": 1, "sha256": 2}]}, "invalid release input fields"),
+        (
+            {"inputs": [{"path": "results/test/data.json", "sha256": "0" * 64}]},
+            "prohibited release input path",
+        ),
+        (
+            {"inputs": [{"path": "missing.json", "sha256": "0" * 64}]},
+            "release input hash mismatch",
+        ),
+    ],
+)
+def test_release_audit_rejects_invalid_provenance(
+    tmp_path: Path, summary_update: dict[str, object], message: str
+) -> None:
+    source_root = Path.cwd()
+    for relative in (
+        "LICENSE",
+        "README.md",
+        "uv.lock",
+        ".github/workflows/ci.yml",
+        "assets/architecture.svg",
+        "assets/result-summary.svg",
+        "docs/26-final-analysis.md",
+        "docs/engineering-article.md",
+        "configs/analysis/final.yaml",
+    ):
+        target = tmp_path / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes((source_root / relative).read_bytes())
+    report_dir = tmp_path / "reports/final"
+    report_dir.mkdir(parents=True)
+    for path in (source_root / "reports/final").iterdir():
+        (report_dir / path.name).write_bytes(path.read_bytes())
+    summary_path = report_dir / "summary.json"
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    summary.update(summary_update)
+    summary_path.write_text(json.dumps(summary), encoding="utf-8")
+    manifest_path = report_dir / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["artifacts"]["summary.json"] = sha256_file(summary_path)
+    manifest["config_sha256"] = sha256_file(tmp_path / "configs/analysis/final.yaml")
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    with pytest.raises(ValueError, match=message):
+        audit_final_release(tmp_path)
+
+
+def test_release_audit_reports_missing_files(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="missing release files"):
+        audit_final_release(tmp_path)

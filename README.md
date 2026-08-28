@@ -1,183 +1,145 @@
-# tool-abstention
+# Tool Abstention
 
-**Teaching small language models *when not to call a tool* — a reproducible post-training + evaluation pipeline for agentic abstention.**
+**A reproducible small-model post-training system for deciding when an agent should—and should not—call a tool.**
 
-> Most tool-use benchmarks (BFCL, τ-bench) measure whether a model calls the *correct* tool with the *correct* arguments. This project measures and trains the opposite half of the problem: recognizing when **no tool should be called at all** — because the answer is already in the prompt/parametric knowledge, because a required parameter is missing, or because no available tool can help.
+![Final result summary](assets/result-summary.svg)
 
-## Why this exists
+Tool-use benchmarks usually score whether a model selected the correct function.
+This project studies the preceding decision: whether any visible function should be
+called. The system distinguishes five behaviors: `CALL`, `ANSWER`, `CLARIFY`,
+`REFUSE`, and `NOOP`.
 
-The "fine-tune a small model to call tools with LoRA + DPO/GRPO" project is now crowded (ToolBrain, RLFactory, Hugging Face TRL, and a dozen tutorials ship it). But a cluster of very recent papers (2025–2026) has identified a live, under-explored failure mode: **agents over-call and hallucinate tools**, and abstention is a distinct capability that scales *independently* of task-solving ability. Those papers release benchmarks and data but **almost none release a clean, reproducible small-model training pipeline.**
+The repository contains the complete engineering path: strict data contracts,
+paired synthetic tasks, deterministic evaluation, human evaluator calibration,
+MLX LoRA training, a project-owned DPO implementation, external BFCL evaluation,
+statistical analysis, and content-hashed artifacts.
 
-This project fills that gap:
+## Results
 
-- an **extended abstention taxonomy** (act vs. four ways to abstain),
-- a **paired-task benchmark** (should-act vs. should-abstain),
-- a **training pipeline** (SFT → DPO / ORPO / RPO, LoRA) runnable on a 24 GB Apple-Silicon laptop,
-- a **verifiable evaluation harness** (no LLM-as-judge required for the core metrics).
+| Evidence | Result |
+|---|---:|
+| Base model, internal validation | 62.50% |
+| 1.5B SFT, internal accuracy (3-seed mean ± sample SD) | **94.72% ± 0.96%** |
+| SFT seed-0 improvement over base, paired bootstrap 95% CI | **+33.33 points [25.00, 41.67]** |
+| 1.5B SFT, BFCL decision accuracy (3-seed mean) | **92.08%** |
+| Evaluator calibration | **60/60** owner-verified items agreed |
+| Engineering gate | **210 tests**, strict mypy, Ruff, **95.10% coverage** |
 
-## Core hypothesis
+Supervised fine-tuning produced the selected model family. Preference optimization
+did not: the numerically verified 1.5B DPO run reached 100% preference reward
+accuracy while free-generation act accuracy collapsed to 0%. Every DPO candidate
+failed a predeclared behavioral gate and was rejected. This disconnect between
+optimization metrics and agent behavior is the central negative result.
 
-> Preference optimization with explicit negative examples (wrong tool call, fabricated tool, missed follow-up) can teach a ≤1.5B model to abstain correctly **without degrading** its tool-call accuracy — and we can measure that trade-off precisely.
+Protocol correctness was also insufficient by itself. Several rejected models
+retained 100% output-format compliance while making the wrong call-versus-abstain
+decision. The evaluator therefore reports semantic behavior and protocol validity
+separately.
+
+- [Engineering article](docs/engineering-article.md)
+- [Final statistical analysis](docs/26-final-analysis.md)
+- [Canonical experiment table](reports/final/comparison.md)
+- [Machine-readable summary](reports/final/summary.json)
+
+## System
+
+![System architecture](assets/architecture.svg)
+
+The internal benchmark contains 300 controlled act/abstain pairs across
+productivity, finance, and weather/geography. Each pair changes one capability
+condition while preserving the task intent. Labels and expected behavior are
+defined by construction and validated with strict Pydantic and JSON Schema
+contracts.
+
+Evaluation is deterministic and replayable from stored outputs. It validates tool
+syntax and arguments, scores the five behavior classes, reports paired accuracy
+and hallucination rates, and separates semantic correctness from protocol
+correctness. A blinded 60-item human audit calibrated these rules.
+
+The external evaluation uses a pinned, non-overlapping BFCL slice of 400 CALL and
+240 ABSTAIN records. Public benchmarks were evaluation-only and never influenced
+training, checkpoint selection, or retries. AgentAbstain is provenance-cataloged in
+its native multi-turn format but not forced into this single-turn harness.
+
+## Reproduce and verify
+
+Python 3.12 and [`uv`](https://docs.astral.sh/uv/) are required. The public release
+can be verified without a GPU, network connection, model download, or credentials:
+
+```bash
+uv sync --locked
+make release
+```
+
+This command rebuilds the canonical analysis, runs formatting, lint, strict type
+checking, and all tests, then verifies SHA-256 hashes for five generated report
+artifacts and 30 source evaluation files.
+
+Useful CPU-only commands:
+
+```bash
+make check
+make analysis
+uv run tool-abstention release-audit --root .
+uv run tool-abstention --help
+```
+
+Model training and inference require Apple Silicon and the optional inference
+dependencies:
+
+```bash
+uv sync --locked --group inference
+make sft-data
+make sft-train
+make sft-validation
+```
+
+Generated datasets, model weights, adapters, caches, and credentials are ignored.
+Committed metrics, evaluations, manifests, configs, and compact raw predictions
+make the reported experiments auditable without shipping checkpoints.
+
+## Repository map
+
+```text
+src/tool_abstention/   contracts, generators, training, inference, evaluation
+configs/               exact data, model, training, and analysis configurations
+tests/                 numerical, contract, leakage, evaluator, and CLI tests
+calibration/           blinded human evaluator-calibration artifacts
+results/               stored experiment outputs and manifests
+reports/final/         deterministic comparison, statistics, plots, and hashes
+docs/                  engineering article, provenance, experiments, final analysis
+```
+
+## Implemented stack
+
+- Pinned 4-bit Qwen2.5 1.5B primary and 0.5B screening models
+- MLX-LM LoRA SFT on a 24 GB Apple-Silicon laptop
+- Project-owned, frozen-reference, completion-only MLX DPO
+- Pydantic, JSON Schema Draft 2020-12, NumPy, PyYAML
+- `uv`, Ruff, strict mypy, pytest, coverage, GitHub Actions
+- Canonical UTF-8 JSON/JSONL and SHA-256 provenance manifests
+
+## Research boundaries
+
+- The internal corpus is synthetic and templated; external validity is limited.
+- BFCL evaluation scores CALL-versus-ABSTAIN behavior here, not exact arguments.
+- Three SFT seeds expose instability but yield wide exploratory intervals.
+- The held-out internal test split remains sealed; all reported internal numbers are
+  validation results.
+- No claim is made that DPO generally fails—only that the tested objectives and
+  data failed their behavioral gates for this model and setting.
 
 ## Documentation
 
-All planning lives in [`docs/`](docs/). Read in order:
-
-| # | Doc | Answers |
-|---|-----|---------|
-| 01 | [vision.md](docs/01-vision.md) | What, why, non-goals, success criteria |
-| 02 | [literature-review.md](docs/02-literature-review.md) | What exists, where the gap is, citations |
-| 03 | [research-questions.md](docs/03-research-questions.md) | Hypotheses + the research/paper angle |
-| 04 | [architecture.md](docs/04-architecture.md) | Repo layout, components, data flow |
-| 05 | [data-plan.md](docs/05-data-plan.md) | Taxonomy, dataset construction, sources |
-| 06 | [training-plan.md](docs/06-training-plan.md) | Stages, models, hyperparameters, MLX |
-| 07 | [evaluation-plan.md](docs/07-evaluation-plan.md) | Metrics, harness, baselines, testing |
-| 08 | [roadmap.md](docs/08-roadmap.md) | Phases, milestones, exit criteria |
-| 09 | [experiment-tracking.md](docs/09-experiment-tracking.md) | Reproducibility, configs, logging |
-| 10 | [paper-plan.md](docs/10-paper-plan.md) | Research contribution + target venue |
-| 11 | [implementation-plan.md](docs/11-implementation-plan.md) | Build order, interfaces, verification, deliverables |
-| 12 | [baseline-diagnostics.md](docs/12-baseline-diagnostics.md) | Local model and evaluator calibration evidence |
-| 13 | [external-data.md](docs/13-external-data.md) | BFCL provenance, leakage controls, and baseline results |
-| 14 | [sft-baseline.md](docs/14-sft-baseline.md) | SFT training evidence, results, and failure analysis |
-| 15 | [malformed-call-analysis.md](docs/15-malformed-call-analysis.md) | BFCL protocol regression taxonomy and diagnosis |
-| 16 | [sft-multiseed.md](docs/16-sft-multiseed.md) | Three-seed SFT uncertainty and external generalization |
-| 17 | [protocol-repair.md](docs/17-protocol-repair.md) | Internal syntax-repair ablation and rejected trade-off |
-| 18 | [preference-data.md](docs/18-preference-data.md) | Strict internal preference contracts and DPO boundary audit |
-| 19 | [dpo-smoke.md](docs/19-dpo-smoke.md) | Custom MLX DPO math, cache design, and passed 0.5B smoke |
-| 20 | [dpo-seed0.md](docs/20-dpo-seed0.md) | Rejected 1.5B DPO run and over-abstention analysis |
-| 21 | [dpo-mean-normalization.md](docs/21-dpo-mean-normalization.md) | Mean-logp diagnostic and behavioral-smoke correction |
-| 22 | [sft-0.5b-screening.md](docs/22-sft-0.5b-screening.md) | Competent small-model initializer and DPO promotion gates |
-| 23 | [dpo-screening-mean32.md](docs/23-dpo-screening-mean32.md) | Failed behavioral screen and subset-selection audit |
-| 24 | [dpo-stratified-screen.md](docs/24-dpo-stratified-screen.md) | Corrected selection, failed rerun, and DPO stop decision |
-| 25 | [anchored-dpo-screen.md](docs/25-anchored-dpo-screen.md) | Supervised-anchor matrix and terminal preference decision |
-| 26 | [final-analysis.md](docs/26-final-analysis.md) | Canonical statistics, compute accounting, and research outcome |
-
-Engineering activity and decisions are recorded in [`WORKLOG.md`](WORKLOG.md). The
-logging convention is defined in the implementation plan and applies to every
-future implementation and experiment session.
-
-## Status
-
-**Phase 4 — evaluation and analysis complete.** The v1 300-pair data pipeline is
-complete. Controlled 0.5B prompt diagnostics, a pinned 1.5B capacity diagnostic,
-and three frozen SFT seeds have executed locally on Metal. SFT averages 94.72 ±
-0.96% internal accuracy and 89.72 ± 1.72% BFCL balanced accuracy (mean ± sample
-SD). The frozen 1.5B `native-full` baseline scored
-62.5% calibrated accuracy, 83.33% act accuracy, 41.67% abstention accuracy, and
-25% paired accuracy on all 120 validation tasks. The calibrated evaluator agrees
-with all 60 owner-verified adjudications across behavior, semantics, and protocol
-validity. Held-out test data remains untouched. See
-[`docs/12-baseline-diagnostics.md`](docs/12-baseline-diagnostics.md),
-[`docs/13-external-data.md`](docs/13-external-data.md),
-[`docs/16-sft-multiseed.md`](docs/16-sft-multiseed.md),
-[`docs/08-roadmap.md`](docs/08-roadmap.md) and
-[`docs/11-implementation-plan.md`](docs/11-implementation-plan.md).
-
-The numerically verified 1.5B DPO seed-0 run is a negative result. Although its
-preference reward accuracy reached 100%, free-generation act accuracy collapsed to
-0%, so it failed the internal promotion gate and BFCL was not run. The original
-SFT baseline remains selected; see [`docs/20-dpo-seed0.md`](docs/20-dpo-seed0.md).
-Two bounded 0.5B screens subsequently showed that mean normalization and corrected
-pair/domain/class selection do not prevent CALL collapse. Standard DPO is stopped;
-no further 1.5B run is authorized from this branch.
-Adding a chosen-completion SFT anchor reduced but did not prevent behavioral
-regression. Both predeclared anchored candidates failed, so preference optimization
-is closed for this project version. The deterministic final analysis selects the
-three-seed 1.5B SFT baseline and preserves preference optimization as a negative
-result. See [`reports/final/comparison.md`](reports/final/comparison.md) and
-[`docs/26-final-analysis.md`](docs/26-final-analysis.md).
-
-## Development setup
-
-The foundation targets Python 3.12 and uses
-[`uv`](https://docs.astral.sh/uv/) for locked dependency management:
-
-```bash
-make setup
-make check
-make data
-make preferences          # evaluator-validated internal chosen/rejected pairs
-uv run tool-abstention prepare-dpo --config configs/training/dpo-prepare-smoke.yaml --internal data/processed --preferences data/training/preferences-smoke --output data/training/dpo-smoke
-uv run tool-abstention cache-dpo-reference --config configs/training/dpo-smoke.yaml --examples data/training/dpo-smoke/train.jsonl --output results/dpo/smoke/reference-train
-uv run tool-abstention train-dpo --config configs/training/dpo-smoke.yaml --train-examples data/training/dpo-smoke/train.jsonl --valid-examples data/training/dpo-smoke/valid.jsonl --train-cache results/dpo/smoke/reference-train --valid-cache results/dpo/smoke/reference-valid --output checkpoints/dpo/smoke-seed-0
-make baseline-smoke
-make prompt-diagnostic
-make capacity-diagnostic
-make baseline-validation
-make external-fetch       # networked, one-time pinned snapshots
-make external-prepare     # network-free normalization and leakage audit
-make external-baseline    # local Metal inference + stored evaluation
-make sft-data             # internal train/validation only
-make protocol-data        # deterministic internal CALL/CLARIFY stress pairs
-make protocol-repair-data # augmented SFT corpus; no test or external data
-make sft-smoke            # 0.5B/20-step Metal training check
-make sft-train            # 1.5B seed-0 LoRA training
-make sft-validation       # adapter-aware internal validation
-make analysis             # CPU-only, network-free canonical final report
-uv run python -m tool_abstention --help
-uv run tool-abstention validate-config configs/project.yaml
-uv run tool-abstention export-schemas /tmp/tool-abstention-schemas
-uv run tool-abstention validate-record task path/to/task.json
-uv run tool-abstention audit-pairs data/raw/productivity/tasks.jsonl
-uv run tool-abstention evaluate \
-  --tasks data/raw/productivity/tasks.jsonl \
-  --predictions path/to/predictions.jsonl \
-  --output results/local-eval
-```
-
-`make check` runs Ruff formatting and lint checks, strict mypy type checking,
-and the pytest suite with coverage. GitHub Actions runs the same CPU-only command;
-foundation checks do not download model weights or require Apple Silicon.
-
-Canonical task, pair, prediction, and evaluation records are strict immutable
-Pydantic models. JSON Schema exports are deterministic and unknown record fields
-are rejected. Tool parameter schemas use JSON Schema Draft 2020-12.
-
-`make data` deterministically generates 300 pairs / 600 tasks across productivity,
-finance, and weather/geo. Every domain contains all four abstention classes, and
-template families remain isolated within train, validation, or test. Generated data
-is ignored by Git and accompanied by a content-hashed manifest and dataset card.
-
-Stored predictions can be evaluated without rerunning inference. The evaluator
-parses plain/OpenAI/Qwen-style tool calls, validates class-specific behavior, and
-writes per-example judgments plus accuracy, paired accuracy, macro-F1, act and
-abstention accuracy, hallucination rate, and per-class metrics.
-
-Human evaluator calibration uses a deterministic, blinded 60-item packet balanced
-across all five classes and three domains. Open
-[`calibration/round-1/annotate.html`](calibration/round-1/annotate.html), complete
-the labels, and download `annotations.completed.csv`. Validate returned labels with:
-
-```bash
-uv run tool-abstention validate-calibration \
-  --annotations path/to/annotations.completed.csv \
-  --mapping calibration/round-1/mapping.jsonl
-```
-
-Two independent annotation files can be compared with `calibration-agreement`,
-which reports exact agreement and Cohen's kappa for every judgment axis.
-
-The smoke model is pinned to
-`mlx-community/Qwen2.5-0.5B-Instruct-4bit@53a32aee5e9447773fd2b85988395066aef3700a`.
-The capacity diagnostic pins
-`mlx-community/Qwen2.5-1.5B-Instruct-4bit@8b403126fc14f14cfc99bb4cfa72ecbc129ea677`.
-MLX dependencies are isolated in the `inference` dependency group, and CPU-only CI
-does not import or download them.
-
-Public benchmark records are external evaluation only and never enter SFT data.
-The pinned BFCL slice contains 400 CALL and 240 ABSTAIN records; preparation found
-no overlap with internal train, validation, or test queries. The 1.5B native-full
-baseline scored 88.44% decision accuracy and 84.83% balanced accuracy. AgentAbstain
-is retained in its native multi-turn layout and cataloged as 263 pairs across 42
-environments; it is not converted or executed by the single-turn harness.
-
-## Stack (planned)
-
-- **Models:** Qwen2.5-1.5B-Instruct (primary), Qwen2.5-0.5B / Qwen3-0.6B (iteration), Llama 3.2 3B (stretch)
-- **Training:** MLX-LM LoRA for SFT; project-owned, frozen-reference MLX DPO for the pinned stack
-- **Evaluation:** PyTorch / pure-Python harness (inference + metrics), portable off Apple Silicon
-- **Hardware target:** MacBook M5, 24 GB unified memory
+Start with the [engineering article](docs/engineering-article.md), then consult the
+[final analysis](docs/26-final-analysis.md). Detailed experiment reports
+(`docs/12`–`docs/25`) preserve provenance and negative results. External source
+licenses and immutable revisions are documented in
+[external-data.md](docs/13-external-data.md).
 
 ## License
 
-Code and docs to be released under Apache-2.0 (matching the When2Call benchmark we build on). Third-party datasets retain their own licenses — see [`docs/05-data-plan.md`](docs/05-data-plan.md).
+Code and original documentation are Apache-2.0. Third-party datasets retain their
+own licenses; BFCL is Apache-2.0 and AgentAbstain data is CC BY 4.0. See the
+[external-data documentation](docs/13-external-data.md) for attribution and pinned
+revisions.

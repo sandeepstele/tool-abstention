@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import io
+import json
 import math
 import random
 from collections.abc import Sequence
@@ -131,8 +132,6 @@ def _load_yaml(path: Path) -> FinalAnalysisConfig:
 
 
 def _load_metrics(path: Path) -> dict[str, object]:
-    import json
-
     value = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(value, dict):
         raise ValueError(f"metrics must be an object: {path}")
@@ -341,3 +340,69 @@ def build_final_analysis(config_path: Path, output: Path) -> dict[str, object]:
     }
     (output / "manifest.json").write_bytes(canonical_json_bytes(manifest) + b"\n")
     return manifest
+
+
+def audit_final_release(root: Path) -> dict[str, object]:
+    """Verify committed release artifacts and their complete hash chain."""
+    required = (
+        "LICENSE",
+        "README.md",
+        "uv.lock",
+        ".github/workflows/ci.yml",
+        "configs/analysis/final.yaml",
+        "assets/architecture.svg",
+        "assets/result-summary.svg",
+        "docs/26-final-analysis.md",
+        "docs/engineering-article.md",
+        "reports/final/manifest.json",
+        "reports/final/summary.json",
+    )
+    missing = [path for path in required if not (root / path).is_file()]
+    if missing:
+        raise ValueError(f"missing release files: {', '.join(missing)}")
+
+    manifest = _load_metrics(root / "reports/final/manifest.json")
+    artifacts = manifest.get("artifacts")
+    if not isinstance(artifacts, dict) or not artifacts:
+        raise ValueError("release manifest has no artifacts")
+    verified_artifacts = 0
+    for name, expected_hash in artifacts.items():
+        if not isinstance(name, str) or not isinstance(expected_hash, str):
+            raise ValueError("release manifest artifact entries must be strings")
+        path = root / "reports/final" / name
+        if not path.is_file() or sha256_file(path) != expected_hash:
+            raise ValueError(f"release artifact hash mismatch: {name}")
+        verified_artifacts += 1
+    expected_config_hash = manifest.get("config_sha256")
+    if expected_config_hash != sha256_file(root / "configs/analysis/final.yaml"):
+        raise ValueError("analysis config hash mismatch")
+
+    summary = _load_metrics(root / "reports/final/summary.json")
+    if summary.get("held_out_test_opened") is not False:
+        raise ValueError("release must attest that the held-out test stayed sealed")
+    if summary.get("external_data_used_for_training") is not False:
+        raise ValueError("release must prohibit external benchmark training")
+    inputs = summary.get("inputs")
+    if not isinstance(inputs, list) or not inputs:
+        raise ValueError("release summary has no input provenance")
+    verified_inputs = 0
+    for item in inputs:
+        if not isinstance(item, dict):
+            raise ValueError("invalid release input entry")
+        relative = item.get("path")
+        expected_hash = item.get("sha256")
+        if not isinstance(relative, str) or not isinstance(expected_hash, str):
+            raise ValueError("invalid release input fields")
+        path = Path(relative)
+        if path.is_absolute() or "test" in {part.casefold() for part in path.parts}:
+            raise ValueError(f"prohibited release input path: {relative}")
+        if not (root / path).is_file() or sha256_file(root / path) != expected_hash:
+            raise ValueError(f"release input hash mismatch: {relative}")
+        verified_inputs += 1
+    return {
+        "status": "pass",
+        "verified_artifacts": verified_artifacts,
+        "verified_inputs": verified_inputs,
+        "held_out_test_opened": False,
+        "external_data_used_for_training": False,
+    }

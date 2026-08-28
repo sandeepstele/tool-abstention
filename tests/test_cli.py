@@ -120,6 +120,18 @@ def test_final_analysis_command_delegates(
     assert '"schema_version": 1' in capsys.readouterr().out
 
 
+def test_release_audit_command_delegates(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    def fake_audit(root: Path) -> dict[str, object]:
+        assert root == tmp_path
+        return {"status": "pass"}
+
+    monkeypatch.setattr("tool_abstention.cli.audit_final_release", fake_audit)
+    main(["release-audit", "--root", str(tmp_path)])
+    assert '"status": "pass"' in capsys.readouterr().out
+
+
 def test_validate_config_prints_json(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

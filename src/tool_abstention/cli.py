@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import cast
 
 from tool_abstention import __version__
-from tool_abstention.analysis import build_final_analysis
+from tool_abstention.analysis import audit_final_release, build_final_analysis
 from tool_abstention.calibration import (
     agreement_summary,
     annotation_summary,
@@ -246,6 +246,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     final_analysis.add_argument("--config", required=True, type=Path)
     final_analysis.add_argument("--output", required=True, type=Path)
+
+    release_audit = subparsers.add_parser(
+        "release-audit", help="verify the committed final release hash chain"
+    )
+    release_audit.add_argument("--root", type=Path, default=Path("."))
     return parser
 
 
@@ -495,6 +500,10 @@ def main(argv: Sequence[str] | None = None) -> None:
         if args.command == "build-final-analysis":
             manifest = build_final_analysis(args.config, args.output)
             print(json.dumps(manifest, indent=2))
+            return
+        if args.command == "release-audit":
+            report = audit_final_release(args.root)
+            print(json.dumps(report, indent=2))
             return
     except (OSError, ValueError) as error:
         parser.exit(2, f"error: {error}\n")
