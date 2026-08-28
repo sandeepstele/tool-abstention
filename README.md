@@ -44,6 +44,7 @@ All planning lives in [`docs/`](docs/). Read in order:
 | 17 | [protocol-repair.md](docs/17-protocol-repair.md) | Internal syntax-repair ablation and rejected trade-off |
 | 18 | [preference-data.md](docs/18-preference-data.md) | Strict internal preference contracts and DPO boundary audit |
 | 19 | [dpo-smoke.md](docs/19-dpo-smoke.md) | Custom MLX DPO math, cache design, and passed 0.5B smoke |
+| 20 | [dpo-seed0.md](docs/20-dpo-seed0.md) | Rejected 1.5B DPO run and over-abstention analysis |
 
 Engineering activity and decisions are recorded in [`WORKLOG.md`](WORKLOG.md). The
 logging convention is defined in the implementation plan and applies to every
@@ -65,6 +66,11 @@ validity. Held-out test data remains untouched. See
 [`docs/16-sft-multiseed.md`](docs/16-sft-multiseed.md),
 [`docs/08-roadmap.md`](docs/08-roadmap.md) and
 [`docs/11-implementation-plan.md`](docs/11-implementation-plan.md).
+
+The numerically verified 1.5B DPO seed-0 run is a negative result. Although its
+preference reward accuracy reached 100%, free-generation act accuracy collapsed to
+0%, so it failed the internal promotion gate and BFCL was not run. The original
+SFT baseline remains selected; see [`docs/20-dpo-seed0.md`](docs/20-dpo-seed0.md).
 
 ## Development setup
 

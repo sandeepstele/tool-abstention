@@ -1010,3 +1010,35 @@ and AgentAbstain external evaluation partitions out of training.
   No BFCL, AgentAbstain, or rejected protocol-repair artifact was opened.
 - Final CPU gate: Ruff clean, strict mypy clean over 47 source files, and all 193
   tests passed at 95.14% aggregate coverage.
+
+## 2026-08-27 — 1.5B DPO seed-0 experiment
+
+### Frozen-reference cache and training
+
+- After the smoke commit was pushed, computed the pinned 1.5B frozen-reference
+  caches: 360 train records (`a1c15ad…7153`) and 120 validation records
+  (`d3e0d5b…012c`). Both used original SFT adapter `88841d69…2556`, tokenizer hash
+  `a126ebff…e74d`, maximum length 2048, and internal-only prepared examples.
+- Ran the one authorized 360-example seed-0 epoch with the predeclared config. No
+  retry, retuning, early stopping, or checkpoint selection occurred. Training and
+  four scheduled validation passes completed with finite values.
+- Runtime was 2,455.13 seconds, peak memory 12.327 GB, and no chosen/rejected
+  completion was truncated. Output adapter SHA-256 is `f643063f…5485`.
+- Final preference validation loss was 0.000464, reward margin 15.2616, and reward
+  accuracy 100%. A fresh adapter reload reproduced all metrics exactly.
+
+### Internal gate and rejection
+
+- Evaluated all 120 original internal validation tasks with the frozen inference
+  config. Accuracy collapsed from SFT seed 0's 95.83% to 42.50%; act accuracy fell
+  from 100% to 0%, abstention accuracy fell from 91.67% to 85%, paired accuracy
+  fell to 0%, and protocol compliance stayed 100%.
+- Evaluated the eight internal protocol-stress tasks. Accuracy was 0%, act accuracy
+  0%, and hallucinated-call rate 0%. Inspection showed four direct answers and
+  four refusals, not calls: the apparent syntax improvement was complete
+  over-abstention.
+- Rejected the DPO adapter because three internal promotion conditions failed.
+  BFCL was not opened or run. No external result influenced training, selection,
+  or retry behavior, and no retry was performed.
+- The held-out test remained byte-identical at
+  `76bbac17a10e87c9cb58aaaacf1b2be8c5dccbd22790c19e8e01a04c49f59bc8`.

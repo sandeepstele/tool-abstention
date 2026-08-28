@@ -25,9 +25,11 @@ must jointly represent syntax and decision negatives rather than optimize either
 in isolation.
 The preference-data contract, seven-type internal negative dataset, numerically
 verified custom MLX DPO boundary, and 0.5B Metal compatibility smoke are complete.
-The smoke passed with 100% validation reward accuracy, a positive 3.5767 reward
-margin, exact adapter reload reproduction, and 3.172 GB peak memory. The next gate
-is the single predeclared 1.5B seed-0 DPO experiment and internal promotion audit.
+The single predeclared 1.5B seed-0 DPO run also completed, but failed the internal
+promotion gate: preference reward accuracy was 100% while free-generation act
+accuracy collapsed to 0%. BFCL was correctly skipped and the adapter was rejected.
+The next gate is a separately predeclared internal-only objective/data ablation;
+the original three-seed SFT baseline remains selected.
 Public benchmark records remain evaluation-only, and the held-out test stays sealed.
 
 ---
