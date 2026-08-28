@@ -35,8 +35,10 @@ audit found the subset was severely skewed by domain and abstention class. The
 selector was corrected and one bounded rerun used unchanged optimizer settings;
 it still collapsed act accuracy to 0%. A final two-value supervised-anchor matrix
 reduced but did not prevent the regression. Preference optimization is now stopped
-for this project version. The next gate is consolidated final analysis and report;
-the original three-seed SFT baseline remains selected.
+for this project version. Consolidated offline analysis is complete, including
+three-seed t intervals, paired bootstrap intervals, input/output hashes, canonical
+tables, and plots. The original three-seed SFT baseline remains selected. Phase 5
+repo polish is the only remaining release work.
 Public benchmark records remain evaluation-only, and the held-out test stays sealed.
 
 ---
@@ -90,6 +92,9 @@ Public benchmark records remain evaluation-only, and the held-out test stays sea
 ---
 
 ## Phase 4 — Evaluation & analysis *(~1 week)*
+
+**Status: complete.** The canonical offline report is under `reports/final/`; the
+held-out test remains sealed. The clean negative preference result is documented.
 
 **Build:** trade-off scatter, per-class deltas, significance tests, `results/summary.md`.
 

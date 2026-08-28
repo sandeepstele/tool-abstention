@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import cast
 
 from tool_abstention import __version__
+from tool_abstention.analysis import build_final_analysis
 from tool_abstention.calibration import (
     agreement_summary,
     annotation_summary,
@@ -239,6 +240,12 @@ def build_parser() -> argparse.ArgumentParser:
     infer.add_argument("--stratified-smoke", action="store_true")
     infer.add_argument("--prompt-variant", choices=tuple(PromptVariant), default=None)
     infer.add_argument("--adapter-path", type=Path, default=None)
+
+    final_analysis = subparsers.add_parser(
+        "build-final-analysis", help="build deterministic reports from stored results"
+    )
+    final_analysis.add_argument("--config", required=True, type=Path)
+    final_analysis.add_argument("--output", required=True, type=Path)
     return parser
 
 
@@ -484,6 +491,10 @@ def main(argv: Sequence[str] | None = None) -> None:
             )
             write_run_manifest(inference_config, inference_tasks, args.output)
             print(f"stored {len(predictions)} predictions in {args.output}")
+            return
+        if args.command == "build-final-analysis":
+            manifest = build_final_analysis(args.config, args.output)
+            print(json.dumps(manifest, indent=2))
             return
     except (OSError, ValueError) as error:
         parser.exit(2, f"error: {error}\n")

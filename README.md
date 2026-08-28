@@ -50,6 +50,7 @@ All planning lives in [`docs/`](docs/). Read in order:
 | 23 | [dpo-screening-mean32.md](docs/23-dpo-screening-mean32.md) | Failed behavioral screen and subset-selection audit |
 | 24 | [dpo-stratified-screen.md](docs/24-dpo-stratified-screen.md) | Corrected selection, failed rerun, and DPO stop decision |
 | 25 | [anchored-dpo-screen.md](docs/25-anchored-dpo-screen.md) | Supervised-anchor matrix and terminal preference decision |
+| 26 | [final-analysis.md](docs/26-final-analysis.md) | Canonical statistics, compute accounting, and research outcome |
 
 Engineering activity and decisions are recorded in [`WORKLOG.md`](WORKLOG.md). The
 logging convention is defined in the implementation plan and applies to every
@@ -57,7 +58,7 @@ future implementation and experiment session.
 
 ## Status
 
-**Phase 3 — preference optimization in progress.** The v1 300-pair data pipeline is
+**Phase 4 — evaluation and analysis complete.** The v1 300-pair data pipeline is
 complete. Controlled 0.5B prompt diagnostics, a pinned 1.5B capacity diagnostic,
 and three frozen SFT seeds have executed locally on Metal. SFT averages 94.72 ±
 0.96% internal accuracy and 89.72 ± 1.72% BFCL balanced accuracy (mean ± sample
@@ -81,7 +82,10 @@ pair/domain/class selection do not prevent CALL collapse. Standard DPO is stoppe
 no further 1.5B run is authorized from this branch.
 Adding a chosen-completion SFT anchor reduced but did not prevent behavioral
 regression. Both predeclared anchored candidates failed, so preference optimization
-is closed for this project version and final analysis is next.
+is closed for this project version. The deterministic final analysis selects the
+three-seed 1.5B SFT baseline and preserves preference optimization as a negative
+result. See [`reports/final/comparison.md`](reports/final/comparison.md) and
+[`docs/26-final-analysis.md`](docs/26-final-analysis.md).
 
 ## Development setup
 
@@ -109,6 +113,7 @@ make protocol-repair-data # augmented SFT corpus; no test or external data
 make sft-smoke            # 0.5B/20-step Metal training check
 make sft-train            # 1.5B seed-0 LoRA training
 make sft-validation       # adapter-aware internal validation
+make analysis             # CPU-only, network-free canonical final report
 uv run python -m tool_abstention --help
 uv run tool-abstention validate-config configs/project.yaml
 uv run tool-abstention export-schemas /tmp/tool-abstention-schemas

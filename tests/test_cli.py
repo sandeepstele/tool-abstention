@@ -99,6 +99,27 @@ def test_no_command_prints_help(capsys: pytest.CaptureFixture[str]) -> None:
     assert "validate-config" in capsys.readouterr().out
 
 
+def test_final_analysis_command_delegates(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    def fake_build(config: Path, output: Path) -> dict[str, object]:
+        assert config == tmp_path / "config.yaml"
+        assert output == tmp_path / "report"
+        return {"schema_version": 1}
+
+    monkeypatch.setattr("tool_abstention.cli.build_final_analysis", fake_build)
+    main(
+        [
+            "build-final-analysis",
+            "--config",
+            str(tmp_path / "config.yaml"),
+            "--output",
+            str(tmp_path / "report"),
+        ]
+    )
+    assert '"schema_version": 1' in capsys.readouterr().out
+
+
 def test_validate_config_prints_json(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

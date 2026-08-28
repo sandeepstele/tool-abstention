@@ -1,0 +1,24 @@
+schema_version: 1
+bootstrap_seed: 2027
+bootstrap_samples: 10000
+experiments:
+  - {id: base-internal, family: 1.5b, method: Base native-full, split: internal-validation, status: baseline, metrics: results/base/validation/metrics.json, evaluations: results/base/validation/evaluations.jsonl}
+  - {id: base-bfcl, family: 1.5b, method: Base native-full, split: bfcl, status: baseline, metrics: results/external/bfcl/metrics.json, evaluations: results/external/bfcl/evaluations.jsonl}
+  - {id: sft-seed-0-internal, family: 1.5b, method: SFT seed 0, split: internal-validation, status: selected, metrics: results/sft/1.5b/seed-0-v2/validation/metrics.json, evaluations: results/sft/1.5b/seed-0-v2/validation/evaluations.jsonl}
+  - {id: sft-seed-1-internal, family: 1.5b, method: SFT seed 1, split: internal-validation, status: selected, metrics: results/sft/1.5b/seed-1/validation/metrics.json, evaluations: results/sft/1.5b/seed-1/validation/evaluations.jsonl}
+  - {id: sft-seed-2-internal, family: 1.5b, method: SFT seed 2, split: internal-validation, status: selected, metrics: results/sft/1.5b/seed-2/validation/metrics.json, evaluations: results/sft/1.5b/seed-2/validation/evaluations.jsonl}
+  - {id: sft-seed-0-bfcl, family: 1.5b, method: SFT seed 0, split: bfcl, status: selected, metrics: results/sft/1.5b/seed-0-v2/bfcl/metrics.json, evaluations: results/sft/1.5b/seed-0-v2/bfcl/evaluations.jsonl}
+  - {id: sft-seed-1-bfcl, family: 1.5b, method: SFT seed 1, split: bfcl, status: selected, metrics: results/sft/1.5b/seed-1/bfcl/metrics.json, evaluations: results/sft/1.5b/seed-1/bfcl/evaluations.jsonl}
+  - {id: sft-seed-2-bfcl, family: 1.5b, method: SFT seed 2, split: bfcl, status: selected, metrics: results/sft/1.5b/seed-2/bfcl/metrics.json, evaluations: results/sft/1.5b/seed-2/bfcl/evaluations.jsonl}
+  - {id: repair-internal, family: 1.5b, method: Protocol repair, split: internal-validation, status: rejected, metrics: results/protocol-repair/seed-0/validation/metrics.json, evaluations: results/protocol-repair/seed-0/validation/evaluations.jsonl}
+  - {id: repair-stress, family: 1.5b, method: Protocol repair, split: protocol-stress, status: rejected, metrics: results/protocol-repair/seed-0/stress/metrics.json, evaluations: results/protocol-repair/seed-0/stress/evaluations.jsonl}
+  - {id: repair-bfcl, family: 1.5b, method: Protocol repair, split: bfcl, status: rejected, metrics: results/protocol-repair/seed-0/bfcl/metrics.json, evaluations: results/protocol-repair/seed-0/bfcl/evaluations.jsonl}
+  - {id: dpo-internal, family: 1.5b, method: Standard DPO, split: internal-validation, status: rejected, metrics: results/dpo/1.5b/seed-0/validation/metrics.json, evaluations: results/dpo/1.5b/seed-0/validation/evaluations.jsonl}
+  - {id: sft-screen-internal, family: 0.5b, method: SFT screen, split: internal-validation, status: baseline, metrics: results/sft/0.5b/screening-seed-0/validation/metrics.json, evaluations: results/sft/0.5b/screening-seed-0/validation/evaluations.jsonl}
+  - {id: anchored-05-internal, family: 0.5b, method: Anchored DPO lambda 0.5, split: internal-validation, status: rejected, metrics: results/dpo/ablations/anchored-lambda05/candidate/validation/metrics.json, evaluations: results/dpo/ablations/anchored-lambda05/candidate/validation/evaluations.jsonl}
+  - {id: anchored-10-internal, family: 0.5b, method: Anchored DPO lambda 1.0, split: internal-validation, status: rejected, metrics: results/dpo/ablations/anchored-lambda10/candidate/validation/metrics.json, evaluations: results/dpo/ablations/anchored-lambda10/candidate/validation/evaluations.jsonl}
+paired_comparisons:
+  - {id: sft0-minus-base-internal, baseline: base-internal, candidate: sft-seed-0-internal}
+  - {id: sft0-minus-base-bfcl, baseline: base-bfcl, candidate: sft-seed-0-bfcl}
+  - {id: repair-minus-sft0-internal, baseline: sft-seed-0-internal, candidate: repair-internal}
+  - {id: repair-minus-sft0-bfcl, baseline: sft-seed-0-bfcl, candidate: repair-bfcl}

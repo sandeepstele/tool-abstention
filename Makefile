@@ -1,4 +1,4 @@
-.PHONY: setup data preferences protocol-data protocol-repair-data sft-data sft-smoke sft-train sft-validation external-fetch external-prepare external-baseline baseline-smoke prompt-diagnostic capacity-diagnostic baseline-validation lint typecheck test check
+.PHONY: setup data preferences protocol-data protocol-repair-data sft-data sft-smoke sft-train sft-validation external-fetch external-prepare external-baseline baseline-smoke prompt-diagnostic capacity-diagnostic baseline-validation analysis lint typecheck test check
 
 setup:
 	uv sync --locked
@@ -105,6 +105,9 @@ capacity-diagnostic: data
 baseline-validation: data
 	uv run --group inference tool-abstention infer --config configs/models/qwen-1.5b-diagnostic.yaml --tasks data/processed/validation.jsonl --output results/base/validation/predictions.jsonl --prompt-variant native-full
 	uv run tool-abstention evaluate --tasks data/processed/validation.jsonl --predictions results/base/validation/predictions.jsonl --output results/base/validation
+
+analysis:
+	uv run tool-abstention build-final-analysis --config configs/analysis/final.yaml --output reports/final
 
 lint:
 	uv run ruff format --check .

@@ -1153,3 +1153,28 @@ and AgentAbstain external evaluation partitions out of training.
 - Terminal decision: stop preference optimization for this project version and
   retain the three-seed 1.5B SFT baseline. Move next to consolidated comparison,
   limitations, reproducibility accounting, and technical-report preparation.
+
+## 2026-08-28 — Deterministic final analysis
+
+- Inventoried every retained internal-validation, protocol-stress, and BFCL
+  metrics/evaluation artifact. Confirmed the analysis requires no model execution,
+  network access, prediction parsing, external raw data, or held-out test access.
+- Added a strict offline analysis contract and `build-final-analysis` CLI. Declared
+  inputs are content-hashed; missing files, unknown experiment references,
+  mismatched paired task IDs, duplicate rows, and any path with a `test` component
+  fail closed.
+- Added three-seed sample statistics with t-based 95% intervals and deterministic
+  paired bootstrap intervals with 10,000 resamples. Separated 1.5B primary results
+  from 0.5B screening failures and retained rejected adapters visibly.
+- Added canonical JSON, CSV, Markdown, and dependency-free SVG outputs plus an
+  artifact manifest. Ran `make analysis` twice; all output hashes were identical.
+- Added fixed-vector, determinism, leakage, bad-reference, duplicate, missing-file,
+  and CLI delegation tests. Focused Ruff and strict mypy checks passed; all focused
+  tests passed. The repository-wide quality gate is recorded below after the final
+  documentation update.
+- Decision: select the three-seed 1.5B SFT baseline. Treat preference optimization
+  as a characterized negative result. Do not spend more compute until training data
+  diversity and the optimization method materially change.
+- Final `make check` passed: Ruff formatting and lint clean, strict mypy clean,
+  and all 200 tests passed at 95.05% coverage. The sealed internal-test SHA-256
+  remained `76bbac17a10e87c9cb58aaaacf1b2be8c5dccbd22790c19e8e01a04c49f59bc8`.
