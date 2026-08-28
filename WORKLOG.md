@@ -1068,3 +1068,23 @@ and AgentAbstain external evaluation partitions out of training.
   Rejected the adapter; did not run BFCL or authorize 1.5B.
 - Decision: train and validate a competent one-epoch 0.5B SFT initializer before
   any further DPO behavioral claim. The internal test remains sealed.
+
+## 2026-08-28 — Competent 0.5B SFT screening initializer
+
+- Predeclared a replacement for the inadequate 20-step SFT smoke using the same
+  pinned 0.5B model and internal SFT corpus: 180 batches, batch 2, accumulation 8,
+  learning rate `2e-5`, 16 LoRA layers, rank 16, and maximum length 1024.
+- Training completed on local Metal. Validation loss was 0.029 at iteration 135;
+  peak memory was approximately 7.13 GB. Final adapter SHA-256 is
+  `f788f9f7048282380ae2a2815018bb331a470ded0c6c51bcd8ef47a95a4677f4`.
+- Full original validation scored 80.83% overall, 63.33% act, 98.33% abstention,
+  83.33% behavior accuracy, and 100% protocol compliance. This is sufficiently
+  competent to detect loss of tool-calling behavior.
+- Internal protocol stress remained difficult: 0% exact, 25% behavior accuracy,
+  87.5% protocol compliance, and 50% hallucinated-call rate. This supplies an
+  improvement target without consulting BFCL.
+- Froze behavioral DPO gates: at most five points act regression, two points
+  overall/abstention regression, 100% original protocol compliance, improved
+  stress behavior, non-regressed stress protocol, and lower stress hallucination.
+- No external or held-out test record was used. The adapter is a screening
+  initializer only; the selected research baseline remains 1.5B SFT.
