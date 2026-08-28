@@ -42,6 +42,7 @@ All planning lives in [`docs/`](docs/). Read in order:
 | 15 | [malformed-call-analysis.md](docs/15-malformed-call-analysis.md) | BFCL protocol regression taxonomy and diagnosis |
 | 16 | [sft-multiseed.md](docs/16-sft-multiseed.md) | Three-seed SFT uncertainty and external generalization |
 | 17 | [protocol-repair.md](docs/17-protocol-repair.md) | Internal syntax-repair ablation and rejected trade-off |
+| 18 | [preference-data.md](docs/18-preference-data.md) | Strict internal preference contracts and DPO boundary audit |
 
 Engineering activity and decisions are recorded in [`WORKLOG.md`](WORKLOG.md). The
 logging convention is defined in the implementation plan and applies to every
@@ -73,6 +74,7 @@ The foundation targets Python 3.12 and uses
 make setup
 make check
 make data
+make preferences          # evaluator-validated internal chosen/rejected pairs
 make baseline-smoke
 make prompt-diagnostic
 make capacity-diagnostic

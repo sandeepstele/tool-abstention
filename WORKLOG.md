@@ -921,3 +921,40 @@ and AgentAbstain external evaluation partitions out of training.
   not initialize from it. The original three-seed SFT baseline remains selected.
 - Final gate passed again after documentation: Ruff clean, strict mypy clean over
   42 source files, and all 177 tests passed with 95.22% aggregate coverage.
+
+## 2026-08-27 — Preference-data contracts and generator
+
+### Implementation
+
+- Added strict immutable preference records with internal task/pair identity,
+  split, target class, chosen/rejected responses, seven controlled negative types,
+  source-task hash, generator version, and selected SFT adapter hash.
+- Enforced no test records, no external provenance, no identical responses, a
+  correct protocol-valid chosen response, an evaluator-failing rejected response,
+  and protocol-valid syntax for every non-malformed negative.
+- Added deterministic generation for wrong decisions, wrong abstention class,
+  unnecessary calls, wrong tools, wrong arguments, malformed calls, and schema
+  copying. Paired act responses provide realistic unnecessary-call negatives.
+- Added `build-preferences`, public preference JSON Schema export/validation,
+  `make preferences`, fixed-vector schema hashing, and tests for tampering,
+  contamination, incomplete pairs, determinism, CLI behavior, and evaluator
+  semantics.
+
+### Generated artifact and trainer audit
+
+- Generated 360 train and 120 validation preferences. Distribution: 128 malformed
+  calls, 80 unnecessary calls, 80 wrong abstention classes, and 48 each of schema
+  copying, wrong arguments, wrong decision abstention, and wrong tool.
+- Manifest hashes the internal train/validation sources and records
+  `external_sources=[]`, `test_consumed=false`, and selected SFT adapter SHA-256
+  `88841d6959a751cea2b60b88788b3552c283fc82acdfb9ce43ca08988a582556`.
+- The held-out test remained unchanged at SHA-256
+  `76bbac17a10e87c9cb58aaaacf1b2be8c5dccbd22790c19e8e01a04c49f59bc8`.
+- Audited pinned `mlx-lm 0.29` source and official MLX documentation. It supports
+  LoRA/DoRA/full SFT but has no released DPO trainer or preference dataset. The
+  official DPO feature request remains open and contains only a proposed loss.
+- Decision: do not claim a normal LoRA run is DPO and do not add an unverified
+  third-party trainer. Implement a narrow numerically tested MLX DPO runner next,
+  then require a 0.5B Metal smoke before primary experiments.
+- Final verification passed: Ruff clean, strict mypy clean over 44 source files,
+  and all 183 tests passed with 95.07% aggregate coverage.

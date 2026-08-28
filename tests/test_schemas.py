@@ -12,6 +12,7 @@ from .test_records import act_task
 EXPECTED_SCHEMA_HASHES = {
     "evaluation": "831ae1069c11d590534ff75a6bca7f91f5d61ccd349ea51b0de19970b322162d",
     "pair": "43a8ff104809562b2b312e6ed399931795f3c27f616ef7c4f62b031be661c104",
+    "preference": "dff4db3eef5fe336ac00f8a16532aebed7c991253a3957326725b37457538f9c",
     "prediction": "88bf10153139ad3d208a9abeb6df029de34e0fd288c1cfdbac69eb11e826a056",
     "task": "d314fdeac154547b37185f6b7125a15e42c66d5630b9868c940c57d5789c6049",
 }

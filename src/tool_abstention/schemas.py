@@ -6,6 +6,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+from tool_abstention.preference import PreferenceRecord
 from tool_abstention.records import (
     EvaluationRecord,
     PredictionRecord,
@@ -14,13 +15,14 @@ from tool_abstention.records import (
 )
 from tool_abstention.util.hashing import canonical_json_bytes
 
-type SchemaKind = Literal["task", "pair", "prediction", "evaluation"]
+type SchemaKind = Literal["task", "pair", "prediction", "evaluation", "preference"]
 
 SCHEMA_MODELS: dict[SchemaKind, type[BaseModel]] = {
     "task": TaskRecord,
     "pair": TaskPair,
     "prediction": PredictionRecord,
     "evaluation": EvaluationRecord,
+    "preference": PreferenceRecord,
 }
 
 

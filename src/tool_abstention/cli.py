@@ -36,6 +36,7 @@ from tool_abstention.inference import (
     write_run_manifest,
 )
 from tool_abstention.malformed import analyze_malformed_calls
+from tool_abstention.preference import build_preference_dataset
 from tool_abstention.productivity import (
     audit_pairs,
     build_productivity_dataset,
@@ -75,7 +76,9 @@ def build_parser() -> argparse.ArgumentParser:
     record = subparsers.add_parser(
         "validate-record", help="validate one JSON record against a public schema"
     )
-    record.add_argument("kind", choices=("task", "pair", "prediction", "evaluation"))
+    record.add_argument(
+        "kind", choices=("task", "pair", "prediction", "evaluation", "preference")
+    )
     record.add_argument("path", type=Path)
 
     generate = subparsers.add_parser(
@@ -108,6 +111,13 @@ def build_parser() -> argparse.ArgumentParser:
     repair_data.add_argument("--base-sft", required=True, type=Path)
     repair_data.add_argument("--stress", required=True, type=Path)
     repair_data.add_argument("--output", required=True, type=Path)
+
+    preference_data = subparsers.add_parser(
+        "build-preferences", help="build validated internal-only preference pairs"
+    )
+    preference_data.add_argument("--config", required=True, type=Path)
+    preference_data.add_argument("--internal", required=True, type=Path)
+    preference_data.add_argument("--output", required=True, type=Path)
 
     sft_train = subparsers.add_parser(
         "train-sft", help="train a pinned MLX LoRA adapter"
@@ -249,6 +259,10 @@ def main(argv: Sequence[str] | None = None) -> None:
             manifest = build_protocol_repair_sft(
                 args.base_sft, args.stress, args.output
             )
+            print(json.dumps(manifest, indent=2))
+            return
+        if args.command == "build-preferences":
+            manifest = build_preference_dataset(args.config, args.internal, args.output)
             print(json.dumps(manifest, indent=2))
             return
         if args.command == "train-sft":

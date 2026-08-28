@@ -56,7 +56,8 @@ class SftTrainingConfig(BaseModel):
     grad_checkpoint: bool = False
 
 
-def _assistant_text(task: TaskRecord) -> str:
+def assistant_text(task: TaskRecord) -> str:
+    """Return the deterministic correct assistant response for one task."""
     expected = task.expected
     if isinstance(expected, CallExpected):
         payload = {"name": expected.tool_name, "arguments": expected.arguments}
@@ -89,7 +90,7 @@ def _assistant_text(task: TaskRecord) -> str:
 def format_sft_example(task: TaskRecord) -> dict[str, Any]:
     """Render one canonical task as an MLX chat example with native tools."""
     messages = task_messages(task)
-    messages.append({"role": "assistant", "content": _assistant_text(task)})
+    messages.append({"role": "assistant", "content": assistant_text(task)})
     tools = [
         {
             "type": "function",
