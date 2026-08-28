@@ -288,6 +288,7 @@ def train_dpo(
 
     def loss_fn(policy: Any, pair: TokenizedDpoPair) -> tuple[Any, Any]:
         chosen, rejected, token_count = _pair_logps(policy, pair)
+        chosen_sft_loss = -chosen / train_reference[pair.id].chosen_tokens
         reference = train_reference[pair.id]
         ref_chosen = reference.chosen_logp
         ref_rejected = reference.rejected_logp
@@ -300,9 +301,11 @@ def train_dpo(
         scaled = config.beta * logit
         positive_log_sigmoid = -mx.logaddexp(mx.array(0.0), -scaled)
         negative_log_sigmoid = -mx.logaddexp(mx.array(0.0), scaled)
-        loss = -(1 - config.label_smoothing) * positive_log_sigmoid
-        loss -= config.label_smoothing * negative_log_sigmoid
-        return loss, mx.array(token_count)
+        dpo_loss = -(1 - config.label_smoothing) * positive_log_sigmoid
+        dpo_loss -= config.label_smoothing * negative_log_sigmoid
+        loss = dpo_loss + config.chosen_sft_weight * chosen_sft_loss
+        auxiliary = mx.stack([mx.array(token_count), dpo_loss, chosen_sft_loss])
+        return loss, auxiliary
 
     value_and_grad = cast(Any, nn).value_and_grad(model, loss_fn)
     rng = np.random.default_rng(config.seed)
@@ -319,14 +322,15 @@ def train_dpo(
     for iteration in range(1, config.iters + 1):
         pair = train_pairs[order[(iteration - 1) % len(order)]]
         (loss_and_tokens, gradients) = value_and_grad(model, pair)
-        loss, token_count = loss_and_tokens
+        loss, auxiliary = loss_and_tokens
+        token_count, dpo_loss, chosen_sft_loss = auxiliary
         if grad_accum is None:
             grad_accum = gradients
         else:
             grad_accum = tree_map(
                 lambda left, right: left + right, grad_accum, gradients
             )
-        mx.eval(loss, token_count, grad_accum)
+        mx.eval(loss, auxiliary, grad_accum)
         loss_value = float(loss.item())
         if not math.isfinite(loss_value):
             raise ValueError("DPO training produced non-finite loss")
@@ -346,6 +350,8 @@ def train_dpo(
             row = {
                 "iteration": iteration,
                 "loss": loss_value,
+                "dpo_loss": float(dpo_loss.item()),
+                "chosen_sft_loss": float(chosen_sft_loss.item()),
                 "completion_tokens": int(token_count.item()),
                 "peak_memory_gb": float(mx.get_peak_memory()) / 1e9,
             }

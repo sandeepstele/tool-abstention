@@ -1131,3 +1131,25 @@ and AgentAbstain external evaluation partitions out of training.
 - Decision: retain the original SFT baseline. Any future preference work requires
   a separately planned method change with supervised or explicit conservative/KL
   anchoring and generation-based checkpoint gates.
+
+## 2026-08-28 — Supervised-anchored DPO terminal screen
+
+- Implemented `chosen_sft_weight` and the combined completion-only objective
+  `DPO + λ * chosen NLL`. Added independent NumPy fixed vectors and failure tests;
+  runtime now logs total, DPO, and chosen-SFT losses separately.
+- Strict mypy initially rejected an MLX `stack` tuple; changed it to the typed list
+  form before Metal execution. The first full test run passed all 194 tests but
+  coverage was 94.98%; added the missing non-finite/zero-token anchor failure path
+  instead of lowering the threshold. Final pre-run gate passed at 95.02%.
+- Predeclared exactly two candidates from identical initializer, stratified data,
+  cache, seed, beta, learning rate, and eight-update budget: λ=0.5 and λ=1.0.
+- Both trained with finite component losses, zero truncations, exact reload, and
+  8.891 GB peak memory. Reward accuracy was 87.5%; margins were 0.0810 and 0.0716.
+- λ=0.5 scored 65.83% overall, 35% act, 96.67% abstention, and 100% protocol.
+  λ=1.0 scored 60.83% overall, 28.33% act, 93.33% abstention, and 100% protocol.
+  Both had 12.5% stress behavior, 87.5% stress protocol, and 25% hallucination.
+- Both failed frozen act/overall/stress gates. Rejected both, skipped BFCL, and did
+  not authorize 1.5B. No adaptive anchor/update sweep was performed.
+- Terminal decision: stop preference optimization for this project version and
+  retain the three-seed 1.5B SFT baseline. Move next to consolidated comparison,
+  limitations, reproducibility accounting, and technical-report preparation.

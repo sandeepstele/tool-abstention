@@ -49,6 +49,7 @@ All planning lives in [`docs/`](docs/). Read in order:
 | 22 | [sft-0.5b-screening.md](docs/22-sft-0.5b-screening.md) | Competent small-model initializer and DPO promotion gates |
 | 23 | [dpo-screening-mean32.md](docs/23-dpo-screening-mean32.md) | Failed behavioral screen and subset-selection audit |
 | 24 | [dpo-stratified-screen.md](docs/24-dpo-stratified-screen.md) | Corrected selection, failed rerun, and DPO stop decision |
+| 25 | [anchored-dpo-screen.md](docs/25-anchored-dpo-screen.md) | Supervised-anchor matrix and terminal preference decision |
 
 Engineering activity and decisions are recorded in [`WORKLOG.md`](WORKLOG.md). The
 logging convention is defined in the implementation plan and applies to every
@@ -78,6 +79,9 @@ SFT baseline remains selected; see [`docs/20-dpo-seed0.md`](docs/20-dpo-seed0.md
 Two bounded 0.5B screens subsequently showed that mean normalization and corrected
 pair/domain/class selection do not prevent CALL collapse. Standard DPO is stopped;
 no further 1.5B run is authorized from this branch.
+Adding a chosen-completion SFT anchor reduced but did not prevent behavioral
+regression. Both predeclared anchored candidates failed, so preference optimization
+is closed for this project version and final analysis is next.
 
 ## Development setup
 

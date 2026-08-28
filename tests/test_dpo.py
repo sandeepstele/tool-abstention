@@ -15,6 +15,7 @@ from tool_abstention.dpo import (
     ReferenceCacheManifest,
     ReferenceLogps,
     build_dpo_dataset,
+    numpy_anchored_loss,
     numpy_dpo_metrics,
     numpy_sequence_logps,
     prepare_dpo_examples,
@@ -77,6 +78,7 @@ def training_config() -> DpoTrainingConfig:
         beta=0.1,
         label_smoothing=0,
         logp_normalization="sum",
+        chosen_sft_weight=0,
         batch_size=1,
         grad_accumulation_steps=1,
         iters=2,
@@ -166,6 +168,26 @@ def test_numpy_dpo_invariants_and_smoothing() -> None:
             beta=0.1,
             label_smoothing=0,
             normalization="mean",
+        )
+
+
+def test_numpy_anchored_loss_fixed_vector() -> None:
+    result = numpy_anchored_loss(
+        0.5,
+        np.array([-4.0, -9.0]),
+        np.array([2, 3]),
+        chosen_sft_weight=0.5,
+    )
+    assert result == {
+        "dpo_loss": 0.5,
+        "chosen_sft_loss": 2.5,
+        "loss": 1.75,
+    }
+    with pytest.raises(ValueError, match="non-negative"):
+        numpy_anchored_loss(0.5, np.array([-1.0]), np.array([1]), chosen_sft_weight=-1)
+    with pytest.raises(ValueError, match="must be valid"):
+        numpy_anchored_loss(
+            0.5, np.array([np.nan]), np.array([0]), chosen_sft_weight=0.5
         )
 
 

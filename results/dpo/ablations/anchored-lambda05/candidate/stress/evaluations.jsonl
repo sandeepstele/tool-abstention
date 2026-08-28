@@ -1,0 +1,8 @@
+{"behavior_correct":false,"correct":false,"parsed_tool_call":null,"predicted_class":"ANSWER","protocol_correct":true,"reason_code":"wrong_behavior","semantic_correct":false,"task_id":"protocol-017-act"}
+{"behavior_correct":false,"correct":false,"parsed_tool_call":null,"predicted_class":"ANSWER","protocol_correct":true,"reason_code":"wrong_behavior","semantic_correct":false,"task_id":"protocol-017-abstain"}
+{"behavior_correct":false,"correct":false,"parsed_tool_call":null,"predicted_class":"ANSWER","protocol_correct":true,"reason_code":"wrong_behavior","semantic_correct":false,"task_id":"protocol-018-act"}
+{"behavior_correct":false,"correct":false,"parsed_tool_call":null,"predicted_class":"ANSWER","protocol_correct":true,"reason_code":"wrong_behavior","semantic_correct":false,"task_id":"protocol-018-abstain"}
+{"behavior_correct":true,"correct":false,"parsed_tool_call":{"arguments":{"note":"null","owner":"owner-18"},"name":"plan_route"},"predicted_class":"CALL","protocol_correct":true,"reason_code":"incorrect_tool_call","semantic_correct":false,"task_id":"protocol-019-act"}
+{"behavior_correct":false,"correct":false,"parsed_tool_call":null,"predicted_class":"CALL","protocol_correct":false,"reason_code":"malformed_tool_call","semantic_correct":false,"task_id":"protocol-019-abstain"}
+{"behavior_correct":false,"correct":false,"parsed_tool_call":null,"predicted_class":"ANSWER","protocol_correct":true,"reason_code":"wrong_behavior","semantic_correct":false,"task_id":"protocol-020-act"}
+{"behavior_correct":false,"correct":false,"parsed_tool_call":null,"predicted_class":"ANSWER","protocol_correct":true,"reason_code":"wrong_behavior","semantic_correct":false,"task_id":"protocol-020-abstain"}

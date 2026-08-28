@@ -70,6 +70,7 @@ class DpoTrainingConfig(ContractModel):
     beta: float = Field(gt=0)
     label_smoothing: float = Field(ge=0, lt=0.5)
     logp_normalization: Literal["sum", "mean"] = "sum"
+    chosen_sft_weight: float = Field(default=0.0, ge=0)
     batch_size: Literal[1]
     grad_accumulation_steps: int = Field(gt=0)
     iters: int = Field(gt=0)
@@ -420,6 +421,26 @@ def numpy_dpo_metrics(
         "rejected_reward": float(rejected_rewards.mean()),
         "reward_accuracy": float((margins > 0).mean()),
         "reward_margin": float(margins.mean()),
+    }
+
+
+def numpy_anchored_loss(
+    dpo_loss: float,
+    policy_chosen: np.ndarray,
+    chosen_tokens: np.ndarray,
+    *,
+    chosen_sft_weight: float,
+) -> dict[str, float]:
+    """Combine DPO with mean chosen-completion negative log likelihood."""
+    if chosen_sft_weight < 0:
+        raise ValueError("chosen SFT weight must be non-negative")
+    if not np.all(np.isfinite(policy_chosen)) or not np.all(chosen_tokens > 0):
+        raise ValueError("chosen log probabilities and token counts must be valid")
+    anchor = float((-policy_chosen / chosen_tokens).mean())
+    return {
+        "dpo_loss": dpo_loss,
+        "chosen_sft_loss": anchor,
+        "loss": dpo_loss + chosen_sft_weight * anchor,
     }
 
 

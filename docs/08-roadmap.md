@@ -33,8 +33,9 @@ Mean-normalized DPO was numerically healthier but exposed that the old 20-step
 80.83% accuracy and 63.33% act accuracy. Its first mean-DPO screen failed, and an
 audit found the subset was severely skewed by domain and abstention class. The
 selector was corrected and one bounded rerun used unchanged optimizer settings;
-it still collapsed act accuracy to 0%. Standard DPO is stopped. The next planning
-gate must consider a method change with an explicit supervised/KL anchor;
+it still collapsed act accuracy to 0%. A final two-value supervised-anchor matrix
+reduced but did not prevent the regression. Preference optimization is now stopped
+for this project version. The next gate is consolidated final analysis and report;
 the original three-seed SFT baseline remains selected.
 Public benchmark records remain evaluation-only, and the held-out test stays sealed.
 
