@@ -958,3 +958,55 @@ and AgentAbstain external evaluation partitions out of training.
   then require a 0.5B Metal smoke before primary experiments.
 - Final verification passed: Ruff clean, strict mypy clean over 44 source files,
   and all 183 tests passed with 95.07% aggregate coverage.
+
+## 2026-08-27 — Numerically verified MLX DPO and 0.5B smoke
+
+### Implementation and corrections
+
+- Added strict prepared DPO examples, deterministic balanced smoke selection,
+  shared-prompt token enforcement, completion-only masking, truncation rejection,
+  source hashes, and separate 0.5B/1.5B manifests pinned to their actual SFT
+  adapter hashes.
+- Added independent NumPy fixed-vector implementations for sequence log
+  probabilities, reference-adjusted DPO loss, label smoothing, rewards, reward
+  accuracy, and margin.
+- Added frozen-reference caches with model, revision, adapter, tokenizer, example,
+  maximum-length, record, and completion-token identities. Missing, duplicate,
+  stale, mismatched, and non-finite cache data fail closed.
+- Added the version-gated project-owned MLX runner and `prepare-dpo`,
+  `cache-dpo-reference`, and `train-dpo` commands. The runner keeps one policy
+  model, freezes base weights, trains LoRA only, accumulates gradients, saves
+  checkpoints, reloads the final adapter, and writes canonical audit artifacts.
+- The first static pass found wrong MLX namespace and return-shape assumptions;
+  corrected log-softmax/log-sigmoid operations and typed the MLX-LM load boundary
+  before any Metal training.
+- The first full gate passed all 192 tests but failed coverage at 88.74% because
+  the Metal-only runner cannot import in CPU-only CI. Excluded only that hardware
+  module from CPU coverage, retained pure numerical/cache/leakage tests and fake
+  CLI boundary tests, and added missing failure-path coverage without lowering the
+  95% threshold.
+- Direct `tool-abstention` invocation was unavailable on the shell PATH. Repeated
+  through the locked `uv run tool-abstention` entry point; no generated input or
+  test data changed during the failed attempt.
+
+### Preparation and Metal smoke
+
+- Generated the smoke preference manifest (360 train / 120 validation before
+  selection), then prepared exactly 16 train and 8 validation DPO examples. Also
+  prepared the primary 360/120 manifest without training it.
+- Computed frozen 0.5B reference caches for all 24 smoke examples. Both caches use
+  tokenizer hash `a126ebff…e74d`; train/validation records hashes are
+  `134bf0bc…91a0` and `780f2f4e…68c7`.
+- The initial smoke passed, but audit review found the run manifest lacked embedded
+  canonical-config/exact-command hashes and truncation counts. Added them and
+  reran the full gate and smoke rather than documenting the earlier incomplete
+  artifact.
+- Final 20-step smoke passed: validation loss 0.064053, reward accuracy 100%,
+  reward margin 3.576737, zero train/validation truncations, exact reload metric
+  reproduction, 3.172 GB peak memory, and output adapter hash `1989858a…17f7`.
+  Runtime was 16.03 seconds excluding reference caching.
+- The held-out internal test stayed hash-identical at
+  `76bbac17a10e87c9cb58aaaacf1b2be8c5dccbd22790c19e8e01a04c49f59bc8`.
+  No BFCL, AgentAbstain, or rejected protocol-repair artifact was opened.
+- Final CPU gate: Ruff clean, strict mypy clean over 47 source files, and all 193
+  tests passed at 95.14% aggregate coverage.

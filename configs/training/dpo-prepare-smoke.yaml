@@ -1,0 +1,4 @@
+formatter_version: 1.0.0
+sft_init_hash: 9fba9c2d9ffeb8fb937bfa65ca34ba28bb775ee4815933a7095f8812fd30eba9
+train_limit: 16
+validation_limit: 8

@@ -24,6 +24,76 @@ def test_help_exits_successfully(capsys: pytest.CaptureFixture[str]) -> None:
     assert "Train and evaluate tool-use abstention" in capsys.readouterr().out
 
 
+def test_dpo_runtime_commands_delegate(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    calls: list[tuple[object, ...]] = []
+
+    def fake_cache(*args: object) -> dict[str, int]:
+        calls.append(args)
+        return {"record_count": 2}
+
+    def fake_train(*args: object) -> dict[str, bool]:
+        calls.append(args)
+        return {"gate_passed": True}
+
+    def fake_prepare(*args: object) -> dict[str, int]:
+        calls.append(args)
+        return {"train_count": 16}
+
+    monkeypatch.setattr("tool_abstention.cli.build_dpo_dataset", fake_prepare)
+    monkeypatch.setattr("tool_abstention.cli.cache_reference_logps", fake_cache)
+    monkeypatch.setattr("tool_abstention.cli.train_dpo", fake_train)
+    config = tmp_path / "config.yaml"
+    examples = tmp_path / "examples.jsonl"
+    output = tmp_path / "output"
+    main(
+        [
+            "prepare-dpo",
+            "--config",
+            str(config),
+            "--internal",
+            str(tmp_path / "internal"),
+            "--preferences",
+            str(tmp_path / "preferences"),
+            "--output",
+            str(output),
+        ]
+    )
+    assert '"train_count": 16' in capsys.readouterr().out
+    main(
+        [
+            "cache-dpo-reference",
+            "--config",
+            str(config),
+            "--examples",
+            str(examples),
+            "--output",
+            str(output),
+        ]
+    )
+    assert '"record_count": 2' in capsys.readouterr().out
+    main(
+        [
+            "train-dpo",
+            "--config",
+            str(config),
+            "--train-examples",
+            str(examples),
+            "--valid-examples",
+            str(examples),
+            "--train-cache",
+            str(output),
+            "--valid-cache",
+            str(output),
+            "--output",
+            str(output),
+        ]
+    )
+    assert '"gate_passed": true' in capsys.readouterr().out
+    assert len(calls) == 3
+
+
 def test_no_command_prints_help(capsys: pytest.CaptureFixture[str]) -> None:
     main([])
     assert "validate-config" in capsys.readouterr().out

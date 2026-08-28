@@ -50,3 +50,7 @@ files = ["src", "tests"]
 [tool.pytest.ini_options]
 addopts = "--strict-config --strict-markers --cov=tool_abstention --cov-report=term-missing --cov-fail-under=95"
 testpaths = ["tests"]
+
+[tool.coverage.run]
+# Metal is unavailable in CPU-only CI; its pure contracts and CLI boundary are tested.
+omit = ["src/tool_abstention/dpo_runtime.py"]

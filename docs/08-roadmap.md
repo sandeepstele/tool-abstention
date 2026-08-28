@@ -23,10 +23,11 @@ internal-only repair ablation reduced malformed BFCL calls to 2.03% but collapse
 BFCL abstention to 58.33%, so that adapter was rejected. The preference milestone
 must jointly represent syntax and decision negatives rather than optimize either
 in isolation.
-The preference-data contract and seven-type internal negative dataset are now
-complete. The pinned MLX-LM release has no supported DPO trainer, so the next gate
-is a numerically tested custom MLX DPO boundary and a 0.5B smoke before any primary
-1.5B optimization.
+The preference-data contract, seven-type internal negative dataset, numerically
+verified custom MLX DPO boundary, and 0.5B Metal compatibility smoke are complete.
+The smoke passed with 100% validation reward accuracy, a positive 3.5767 reward
+margin, exact adapter reload reproduction, and 3.172 GB peak memory. The next gate
+is the single predeclared 1.5B seed-0 DPO experiment and internal promotion audit.
 Public benchmark records remain evaluation-only, and the held-out test stays sealed.
 
 ---

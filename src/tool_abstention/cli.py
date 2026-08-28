@@ -16,6 +16,8 @@ from tool_abstention.calibration import (
 )
 from tool_abstention.config import ProjectConfig, load_yaml_config
 from tool_abstention.dataset import build_full_dataset
+from tool_abstention.dpo import build_dpo_dataset
+from tool_abstention.dpo_runtime import cache_reference_logps, train_dpo
 from tool_abstention.external import (
     ExternalDecisionRecord,
     evaluate_external_records,
@@ -118,6 +120,31 @@ def build_parser() -> argparse.ArgumentParser:
     preference_data.add_argument("--config", required=True, type=Path)
     preference_data.add_argument("--internal", required=True, type=Path)
     preference_data.add_argument("--output", required=True, type=Path)
+
+    dpo_data = subparsers.add_parser(
+        "prepare-dpo", help="join internal prompts to validated preferences"
+    )
+    dpo_data.add_argument("--config", required=True, type=Path)
+    dpo_data.add_argument("--internal", required=True, type=Path)
+    dpo_data.add_argument("--preferences", required=True, type=Path)
+    dpo_data.add_argument("--output", required=True, type=Path)
+
+    dpo_cache = subparsers.add_parser(
+        "cache-dpo-reference", help="cache frozen SFT reference log probabilities"
+    )
+    dpo_cache.add_argument("--config", required=True, type=Path)
+    dpo_cache.add_argument("--examples", required=True, type=Path)
+    dpo_cache.add_argument("--output", required=True, type=Path)
+
+    dpo_train = subparsers.add_parser(
+        "train-dpo", help="train a cached-reference MLX DPO adapter"
+    )
+    dpo_train.add_argument("--config", required=True, type=Path)
+    dpo_train.add_argument("--train-examples", required=True, type=Path)
+    dpo_train.add_argument("--valid-examples", required=True, type=Path)
+    dpo_train.add_argument("--train-cache", required=True, type=Path)
+    dpo_train.add_argument("--valid-cache", required=True, type=Path)
+    dpo_train.add_argument("--output", required=True, type=Path)
 
     sft_train = subparsers.add_parser(
         "train-sft", help="train a pinned MLX LoRA adapter"
@@ -263,6 +290,27 @@ def main(argv: Sequence[str] | None = None) -> None:
             return
         if args.command == "build-preferences":
             manifest = build_preference_dataset(args.config, args.internal, args.output)
+            print(json.dumps(manifest, indent=2))
+            return
+        if args.command == "prepare-dpo":
+            manifest = build_dpo_dataset(
+                args.config, args.internal, args.preferences, args.output
+            )
+            print(json.dumps(manifest, indent=2))
+            return
+        if args.command == "cache-dpo-reference":
+            manifest = cache_reference_logps(args.config, args.examples, args.output)
+            print(json.dumps(manifest, indent=2))
+            return
+        if args.command == "train-dpo":
+            manifest = train_dpo(
+                args.config,
+                args.train_examples,
+                args.valid_examples,
+                args.train_cache,
+                args.valid_cache,
+                args.output,
+            )
             print(json.dumps(manifest, indent=2))
             return
         if args.command == "train-sft":

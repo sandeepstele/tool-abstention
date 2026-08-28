@@ -43,6 +43,7 @@ All planning lives in [`docs/`](docs/). Read in order:
 | 16 | [sft-multiseed.md](docs/16-sft-multiseed.md) | Three-seed SFT uncertainty and external generalization |
 | 17 | [protocol-repair.md](docs/17-protocol-repair.md) | Internal syntax-repair ablation and rejected trade-off |
 | 18 | [preference-data.md](docs/18-preference-data.md) | Strict internal preference contracts and DPO boundary audit |
+| 19 | [dpo-smoke.md](docs/19-dpo-smoke.md) | Custom MLX DPO math, cache design, and passed 0.5B smoke |
 
 Engineering activity and decisions are recorded in [`WORKLOG.md`](WORKLOG.md). The
 logging convention is defined in the implementation plan and applies to every
@@ -50,7 +51,7 @@ future implementation and experiment session.
 
 ## Status
 
-**Phase 2 — three-seed SFT baseline complete.** The v1 300-pair data pipeline is
+**Phase 3 — preference optimization in progress.** The v1 300-pair data pipeline is
 complete. Controlled 0.5B prompt diagnostics, a pinned 1.5B capacity diagnostic,
 and three frozen SFT seeds have executed locally on Metal. SFT averages 94.72 ±
 0.96% internal accuracy and 89.72 ± 1.72% BFCL balanced accuracy (mean ± sample
@@ -75,6 +76,9 @@ make setup
 make check
 make data
 make preferences          # evaluator-validated internal chosen/rejected pairs
+uv run tool-abstention prepare-dpo --config configs/training/dpo-prepare-smoke.yaml --internal data/processed --preferences data/training/preferences-smoke --output data/training/dpo-smoke
+uv run tool-abstention cache-dpo-reference --config configs/training/dpo-smoke.yaml --examples data/training/dpo-smoke/train.jsonl --output results/dpo/smoke/reference-train
+uv run tool-abstention train-dpo --config configs/training/dpo-smoke.yaml --train-examples data/training/dpo-smoke/train.jsonl --valid-examples data/training/dpo-smoke/valid.jsonl --train-cache results/dpo/smoke/reference-train --valid-cache results/dpo/smoke/reference-valid --output checkpoints/dpo/smoke-seed-0
 make baseline-smoke
 make prompt-diagnostic
 make capacity-diagnostic
@@ -148,7 +152,7 @@ environments; it is not converted or executed by the single-turn harness.
 ## Stack (planned)
 
 - **Models:** Qwen2.5-1.5B-Instruct (primary), Qwen2.5-0.5B / Qwen3-0.6B (iteration), Llama 3.2 3B (stretch)
-- **Training:** MLX (`mlx_lm.lora` for SFT, `mlx_lm.dpo` for DPO; `mlx_lm_lora` community toolkit for ORPO/CPO)
+- **Training:** MLX-LM LoRA for SFT; project-owned, frozen-reference MLX DPO for the pinned stack
 - **Evaluation:** PyTorch / pure-Python harness (inference + metrics), portable off Apple Silicon
 - **Hardware target:** MacBook M5, 24 GB unified memory
 
