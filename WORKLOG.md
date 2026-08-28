@@ -1108,3 +1108,26 @@ and AgentAbstain external evaluation partitions out of training.
 - Decision: preserve the negative result, fix selection to operate on complete
   pairs round-robin across domain/class, and keep optimizer settings unchanged for
   at most one bounded rerun.
+
+## 2026-08-28 — Stratified DPO rerun and branch stop
+
+- Replaced the small-subset selector with deterministic complete-pair selection
+  round-robin across domain and ANSWER/CLARIFY/REFUSE/NOOP strata. Odd limits,
+  invalid variants, incomplete/duplicate pairs, and unknown strata fail closed.
+- Added tests proving an eight-record subset contains four complete pairs and all
+  four abstention classes. Focused Ruff, strict mypy, and nine DPO tests passed.
+- Regenerated the 32/16 subset. Training contained exactly four pairs per
+  abstention class and represented finance, productivity, and weather. Recomputed
+  frozen reference caches because example hashes changed.
+- Ran the one allowed rerun with unchanged mean-DPO optimizer settings. It
+  completed in 55.5 seconds at 8.991 GB peak memory, with exact reload, zero
+  truncations, 100% reward accuracy, and 0.6191 reward margin.
+- Behavioral gate failed again: original accuracy 80.83%→45.83%, act
+  63.33%→0%, and abstention 98.33%→91.67%. Protocol remained 100%. Stress
+  behavior fell 25%→12.5%; zero hallucination reflected suppressed tool calling.
+- Rejected the adapter, skipped BFCL, and stopped the standard-DPO branch. Subset
+  skew was real but not sufficient to explain collapse. No additional learning
+  rate/beta sweep and no new 1.5B DPO run are authorized.
+- Decision: retain the original SFT baseline. Any future preference work requires
+  a separately planned method change with supervised or explicit conservative/KL
+  anchoring and generation-based checkpoint gates.

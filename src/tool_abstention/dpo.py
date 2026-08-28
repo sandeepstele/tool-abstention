@@ -13,7 +13,7 @@ from tool_abstention.inference import task_messages
 from tool_abstention.mlx_sft_runner import token_ids
 from tool_abstention.preference import NegativeType, PreferenceRecord
 from tool_abstention.records import ContractModel, Slug, TaskRecord
-from tool_abstention.taxonomy import DatasetSplit
+from tool_abstention.taxonomy import DatasetSplit, DecisionClass
 from tool_abstention.util.hashing import (
     canonical_json_bytes,
     sha256_file,
@@ -204,17 +204,56 @@ def prepare_dpo_examples(
 def _select_balanced(examples: list[DpoExample], limit: int | None) -> list[DpoExample]:
     if limit is None or len(examples) <= limit:
         return examples
-    selected: list[DpoExample] = []
-    remaining = list(examples)
-    for negative in NegativeType:
-        match = next(
-            (item for item in remaining if item.negative_type is negative), None
+    if limit % 2:
+        raise ValueError("balanced DPO limits must contain complete pairs")
+    by_pair: dict[str, list[DpoExample]] = {}
+    for example in examples:
+        pair_id, separator, variant = example.task_id.rpartition("-")
+        if not separator or variant not in {"act", "abstain"}:
+            raise ValueError(f"invalid DPO task variant: {example.task_id}")
+        by_pair.setdefault(pair_id, []).append(example)
+    if any(
+        len(members) != 2
+        or {member.task_id.rpartition("-")[2] for member in members}
+        != {"act", "abstain"}
+        for members in by_pair.values()
+    ):
+        raise ValueError("balanced DPO selection requires complete unique pairs")
+
+    strata: dict[tuple[str, str], list[str]] = {}
+    abstention_labels = tuple(
+        label for label in DecisionClass if label is not DecisionClass.CALL
+    )
+    for pair_id in by_pair:
+        matched = next(
+            (
+                (pair_id.split(f"-{label.value.casefold()}-", 1)[0], label.value)
+                for label in abstention_labels
+                if f"-{label.value.casefold()}-" in pair_id
+            ),
+            None,
         )
-        if match is not None and len(selected) < limit:
-            selected.append(match)
-            remaining.remove(match)
-    selected.extend(remaining[: limit - len(selected)])
-    return sorted(selected, key=lambda item: item.id)
+        if matched is None or not matched[0]:
+            raise ValueError(f"cannot derive DPO domain/class stratum: {pair_id}")
+        strata.setdefault(matched, []).append(pair_id)
+    for pair_ids in strata.values():
+        pair_ids.sort()
+
+    selected_pairs: list[str] = []
+    pair_limit = limit // 2
+    ordered_strata = sorted(strata)
+    while len(selected_pairs) < pair_limit:
+        progressed = False
+        for stratum in ordered_strata:
+            if strata[stratum] and len(selected_pairs) < pair_limit:
+                selected_pairs.append(strata[stratum].pop(0))
+                progressed = True
+        if not progressed:
+            raise ValueError("not enough complete DPO pairs for requested limit")
+    return sorted(
+        (member for pair_id in selected_pairs for member in by_pair[pair_id]),
+        key=lambda item: item.id,
+    )
 
 
 def build_dpo_dataset(

@@ -32,8 +32,9 @@ Mean-normalized DPO was numerically healthier but exposed that the old 20-step
 0.5B SFT smoke had 0% act accuracy. A competent one-epoch replacement reached
 80.83% accuracy and 63.33% act accuracy. Its first mean-DPO screen failed, and an
 audit found the subset was severely skewed by domain and abstention class. The
-next gate is deterministic pair/domain/class-stratified selection followed by one
-bounded rerun with unchanged optimizer settings;
+selector was corrected and one bounded rerun used unchanged optimizer settings;
+it still collapsed act accuracy to 0%. Standard DPO is stopped. The next planning
+gate must consider a method change with an explicit supervised/KL anchor;
 the original three-seed SFT baseline remains selected.
 Public benchmark records remain evaluation-only, and the held-out test stays sealed.
 

@@ -218,6 +218,20 @@ def test_dpo_dataset_is_deterministic_internal_and_balanced(tmp_path: Path) -> N
     assert manifest["external_sources"] == []
     assert manifest["test_consumed"] is False
     assert manifest["train_count"] == 8
+    selected = [
+        json.loads(line) for line in (first / "train.jsonl").read_text().splitlines()
+    ]
+    selected_pairs = {item["task_id"].rpartition("-")[0] for item in selected}
+    assert len(selected_pairs) == 4
+    assert all(
+        sum(item["task_id"].startswith(pair_id) for item in selected) == 2
+        for pair_id in selected_pairs
+    )
+    assert {
+        label
+        for label in ("answer", "clarify", "refuse", "noop")
+        if any(f"-{label}-" in pair_id for pair_id in selected_pairs)
+    } == {"answer", "clarify", "refuse", "noop"}
     for name in ("train.jsonl", "valid.jsonl", "manifest.json"):
         assert (first / name).read_bytes() == (second / name).read_bytes()
 
@@ -323,6 +337,10 @@ def test_dpo_rejects_leakage_stale_sources_and_invalid_math() -> None:
         numpy_dpo_metrics(
             np.array([np.nan]), zeros, zeros, zeros, beta=0.1, label_smoothing=0
         )
+    with pytest.raises(ValueError, match="complete pairs"):
+        from tool_abstention.dpo import _select_balanced
+
+        _select_balanced(prepare_dpo_examples(config, tasks, preferences), 3)
     with pytest.raises(ValidationError, match="finite"):
         ReferenceLogps(
             id=item.id,
