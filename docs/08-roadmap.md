@@ -28,7 +28,10 @@ verified custom MLX DPO boundary, and 0.5B Metal compatibility smoke are complet
 The single predeclared 1.5B seed-0 DPO run also completed, but failed the internal
 promotion gate: preference reward accuracy was 100% while free-generation act
 accuracy collapsed to 0%. BFCL was correctly skipped and the adapter was rejected.
-The next gate is a separately predeclared internal-only objective/data ablation;
+Mean-normalized DPO was numerically healthier but exposed that the old 20-step
+0.5B SFT smoke has 0% act accuracy and cannot screen behavior. The next gate is a
+competent one-epoch 0.5B SFT screening initializer, followed by a separately
+predeclared internal-only objective/data ablation;
 the original three-seed SFT baseline remains selected.
 Public benchmark records remain evaluation-only, and the held-out test stays sealed.
 

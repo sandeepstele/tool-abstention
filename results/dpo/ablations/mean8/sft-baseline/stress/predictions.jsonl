@@ -1,0 +1,8 @@
+{"inference_error":null,"input_tokens":452,"latency_ms":124.03683400043519,"output_tokens":2,"peak_memory_gb":0.704219088,"raw_text":"already closed","task_id":"protocol-017-act","tool_call":null}
+{"inference_error":null,"input_tokens":409,"latency_ms":104.67529099696549,"output_tokens":2,"peak_memory_gb":0.61879398,"raw_text":"already closed","task_id":"protocol-017-abstain","tool_call":null}
+{"inference_error":null,"input_tokens":404,"latency_ms":102.8769589975127,"output_tokens":2,"peak_memory_gb":0.616070556,"raw_text":"already closed","task_id":"protocol-018-act","tool_call":null}
+{"inference_error":null,"input_tokens":384,"latency_ms":100.04983299950254,"output_tokens":2,"peak_memory_gb":0.596100124,"raw_text":"already closed","task_id":"protocol-018-abstain","tool_call":null}
+{"inference_error":null,"input_tokens":451,"latency_ms":108.44066700155963,"output_tokens":2,"peak_memory_gb":0.664544008,"raw_text":"already closed","task_id":"protocol-019-act","tool_call":null}
+{"inference_error":null,"input_tokens":437,"latency_ms":105.91033400123706,"output_tokens":2,"peak_memory_gb":0.640228476,"raw_text":"already closed","task_id":"protocol-019-abstain","tool_call":null}
+{"inference_error":null,"input_tokens":494,"latency_ms":110.00445799800218,"output_tokens":2,"peak_memory_gb":0.697503368,"raw_text":"already closed","task_id":"protocol-020-act","tool_call":null}
+{"inference_error":null,"input_tokens":465,"latency_ms":109.53924999921583,"output_tokens":2,"peak_memory_gb":0.674481672,"raw_text":"already closed","task_id":"protocol-020-abstain","tool_call":null}

@@ -1042,3 +1042,29 @@ and AgentAbstain external evaluation partitions out of training.
   or retry behavior, and no retry was performed.
 - The held-out test remained byte-identical at
   `76bbac17a10e87c9cb58aaaacf1b2be8c5dccbd22790c19e8e01a04c49f59bc8`.
+
+## 2026-08-27 — Mean-normalized 0.5B DPO diagnostic
+
+- Added strict `sum`/`mean` completion-log-probability normalization to the DPO
+  config and numerical/runtime implementations. Historical configurations retain
+  `sum` by default. Mean mode requires positive chosen/rejected token counts and
+  normalizes policy and frozen-reference values identically.
+- Added a fixed-vector mean-normalization test. The first expected margin was
+  incorrectly set to 0.1 even though chosen and rejected normalized rewards were
+  both 0.1; the full gate caught it. Corrected the policy vector to encode a real
+  0.1 margin, then all 193 tests passed at 95.12% coverage with Ruff and strict
+  mypy clean.
+- Predeclared one bounded diagnostic: 0.5B SFT smoke initialization, 16/8
+  preferences, mean normalization, 8 updates, `5e-6`, and no smoothing.
+- Before DPO, generated the missing full behavioral baseline for the exact 0.5B
+  initializer. It scored only 5% overall, 0% act, 10% abstention, and 0% stress
+  accuracy. Decision: the old adapter is a compatibility smoke, not a valid
+  behavioral promotion model.
+- The mean-normalized run completed in 8.66 seconds at 3.168 GB peak memory with
+  exact reload reproduction. Reward accuracy was 87.5%, chosen reward 0.0199,
+  rejected reward -0.0463, and reward margin 0.0662; the loss did not saturate.
+- Free generation improved overall accuracy from 5% to 10% and abstention from
+  10% to 20%, but act accuracy remained 0% and stress accuracy remained 0%.
+  Rejected the adapter; did not run BFCL or authorize 1.5B.
+- Decision: train and validate a competent one-epoch 0.5B SFT initializer before
+  any further DPO behavioral claim. The internal test remains sealed.

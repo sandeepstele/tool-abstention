@@ -69,6 +69,7 @@ class DpoTrainingConfig(ContractModel):
     seed: int = Field(ge=0, le=2**32 - 1)
     beta: float = Field(gt=0)
     label_smoothing: float = Field(ge=0, lt=0.5)
+    logp_normalization: Literal["sum", "mean"] = "sum"
     batch_size: Literal[1]
     grad_accumulation_steps: int = Field(gt=0)
     iters: int = Field(gt=0)
@@ -347,6 +348,9 @@ def numpy_dpo_metrics(
     *,
     beta: float,
     label_smoothing: float,
+    chosen_tokens: np.ndarray | None = None,
+    rejected_tokens: np.ndarray | None = None,
+    normalization: Literal["sum", "mean"] = "sum",
 ) -> dict[str, float]:
     """Compute standard DPO loss and reward metrics using stable NumPy math."""
     values = (policy_chosen, policy_rejected, reference_chosen, reference_rejected)
@@ -354,6 +358,15 @@ def numpy_dpo_metrics(
         raise ValueError("invalid DPO beta or label smoothing")
     if any(not np.all(np.isfinite(value)) for value in values):
         raise ValueError("DPO log probabilities must be finite")
+    if normalization == "mean":
+        if chosen_tokens is None or rejected_tokens is None:
+            raise ValueError("mean DPO requires chosen and rejected token counts")
+        if np.any(chosen_tokens <= 0) or np.any(rejected_tokens <= 0):
+            raise ValueError("DPO token counts must be positive")
+        policy_chosen = policy_chosen / chosen_tokens
+        reference_chosen = reference_chosen / chosen_tokens
+        policy_rejected = policy_rejected / rejected_tokens
+        reference_rejected = reference_rejected / rejected_tokens
     logits = (policy_chosen - policy_rejected) - (reference_chosen - reference_rejected)
     scaled = beta * logits
     positive = np.logaddexp(0.0, -scaled)

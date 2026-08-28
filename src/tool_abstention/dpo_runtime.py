@@ -193,6 +193,8 @@ def _evaluate_policy(
     policy_rejected: list[float] = []
     ref_chosen: list[float] = []
     ref_rejected: list[float] = []
+    chosen_tokens: list[int] = []
+    rejected_tokens: list[int] = []
     model.eval()
     for pair in pairs:
         chosen, rejected, _ = _pair_logps(model, pair)
@@ -201,6 +203,8 @@ def _evaluate_policy(
         policy_rejected.append(float(rejected.item()))
         ref_chosen.append(reference[pair.id].chosen_logp)
         ref_rejected.append(reference[pair.id].rejected_logp)
+        chosen_tokens.append(reference[pair.id].chosen_tokens)
+        rejected_tokens.append(reference[pair.id].rejected_tokens)
     import numpy as np
 
     return numpy_dpo_metrics(
@@ -210,6 +214,9 @@ def _evaluate_policy(
         np.asarray(ref_rejected),
         beta=config.beta,
         label_smoothing=config.label_smoothing,
+        chosen_tokens=np.asarray(chosen_tokens),
+        rejected_tokens=np.asarray(rejected_tokens),
+        normalization=config.logp_normalization,
     )
 
 
@@ -282,7 +289,14 @@ def train_dpo(
     def loss_fn(policy: Any, pair: TokenizedDpoPair) -> tuple[Any, Any]:
         chosen, rejected, token_count = _pair_logps(policy, pair)
         reference = train_reference[pair.id]
-        logit = (chosen - rejected) - (reference.chosen_logp - reference.rejected_logp)
+        ref_chosen = reference.chosen_logp
+        ref_rejected = reference.rejected_logp
+        if config.logp_normalization == "mean":
+            chosen = chosen / reference.chosen_tokens
+            rejected = rejected / reference.rejected_tokens
+            ref_chosen /= reference.chosen_tokens
+            ref_rejected /= reference.rejected_tokens
+        logit = (chosen - rejected) - (ref_chosen - ref_rejected)
         scaled = config.beta * logit
         positive_log_sigmoid = -mx.logaddexp(mx.array(0.0), -scaled)
         negative_log_sigmoid = -mx.logaddexp(mx.array(0.0), scaled)

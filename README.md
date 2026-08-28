@@ -45,6 +45,7 @@ All planning lives in [`docs/`](docs/). Read in order:
 | 18 | [preference-data.md](docs/18-preference-data.md) | Strict internal preference contracts and DPO boundary audit |
 | 19 | [dpo-smoke.md](docs/19-dpo-smoke.md) | Custom MLX DPO math, cache design, and passed 0.5B smoke |
 | 20 | [dpo-seed0.md](docs/20-dpo-seed0.md) | Rejected 1.5B DPO run and over-abstention analysis |
+| 21 | [dpo-mean-normalization.md](docs/21-dpo-mean-normalization.md) | Mean-logp diagnostic and behavioral-smoke correction |
 
 Engineering activity and decisions are recorded in [`WORKLOG.md`](WORKLOG.md). The
 logging convention is defined in the implementation plan and applies to every

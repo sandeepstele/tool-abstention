@@ -76,6 +76,7 @@ def training_config() -> DpoTrainingConfig:
         seed=0,
         beta=0.1,
         label_smoothing=0,
+        logp_normalization="sum",
         batch_size=1,
         grad_accumulation_steps=1,
         iters=2,
@@ -144,6 +145,28 @@ def test_numpy_dpo_invariants_and_smoothing() -> None:
     assert preferred["loss"] < smoothed["loss"] < swapped["loss"]
     beta_zero = numpy_dpo_metrics(zeros, zeros, zeros, zeros, beta=0, label_smoothing=0)
     assert beta_zero["loss"] == pytest.approx(np.log(2))
+    mean = numpy_dpo_metrics(
+        np.array([-2.0]),
+        np.array([-3.0]),
+        np.array([-6.0]),
+        np.array([-4.0]),
+        beta=0.1,
+        label_smoothing=0,
+        chosen_tokens=np.array([2]),
+        rejected_tokens=np.array([1]),
+        normalization="mean",
+    )
+    assert mean["reward_margin"] == pytest.approx(0.1)
+    with pytest.raises(ValueError, match="requires"):
+        numpy_dpo_metrics(
+            zeros,
+            zeros,
+            zeros,
+            zeros,
+            beta=0.1,
+            label_smoothing=0,
+            normalization="mean",
+        )
 
 
 def test_dpo_dataset_is_deterministic_internal_and_balanced(tmp_path: Path) -> None:
