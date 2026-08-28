@@ -29,11 +29,11 @@ The single predeclared 1.5B seed-0 DPO run also completed, but failed the intern
 promotion gate: preference reward accuracy was 100% while free-generation act
 accuracy collapsed to 0%. BFCL was correctly skipped and the adapter was rejected.
 Mean-normalized DPO was numerically healthier but exposed that the old 20-step
-0.5B SFT smoke has 0% act accuracy and cannot screen behavior. The next gate is a
-competent one-epoch 0.5B SFT screening initializer is now complete at 80.83%
-original validation accuracy with 63.33% act accuracy. The next gate is a
-separately predeclared mean-normalized DPO run against its frozen behavioral
-thresholds;
+0.5B SFT smoke had 0% act accuracy. A competent one-epoch replacement reached
+80.83% accuracy and 63.33% act accuracy. Its first mean-DPO screen failed, and an
+audit found the subset was severely skewed by domain and abstention class. The
+next gate is deterministic pair/domain/class-stratified selection followed by one
+bounded rerun with unchanged optimizer settings;
 the original three-seed SFT baseline remains selected.
 Public benchmark records remain evaluation-only, and the held-out test stays sealed.
 

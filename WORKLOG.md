@@ -1088,3 +1088,23 @@ and AgentAbstain external evaluation partitions out of training.
   stress behavior, non-regressed stress protocol, and lower stress hallucination.
 - No external or held-out test record was used. The adapter is a screening
   initializer only; the selected research baseline remains 1.5B SFT.
+
+## 2026-08-28 — Mean-DPO behavioral screen and selection audit
+
+- Pinned new internal preferences to competent 0.5B adapter `f788f9f…677f4` and
+  prepared 32 train / 16 validation examples. Frozen caches used pinned model,
+  adapter, tokenizer, and example hashes; the held-out test stayed unchanged.
+- Ran one mean-normalized 32-update screen at `2e-6`. It completed in 63.6 seconds
+  with 5.255 GB peak memory, exact reload reproduction, zero truncations, 100%
+  preference reward accuracy, and 1.2927 reward margin.
+- The frozen behavioral gate failed: original accuracy fell 80.83%→40%, act
+  63.33%→0%, abstention 98.33%→80%, and protocol 100%→85.83%. Stress behavior
+  improved 25%→50%, but protocol collapsed 87.5%→12.5% and hallucination worsened
+  50%→75%. Rejected the adapter and skipped BFCL.
+- Audited the subset. CALL/abstain counts were balanced 16/16, but 30/32 records
+  were finance and almost every pair was ANSWER-family. Root cause: the selector
+  seeds rejection types then fills lexicographically; it does not balance domain
+  or target abstention class.
+- Decision: preserve the negative result, fix selection to operate on complete
+  pairs round-robin across domain/class, and keep optimizer settings unchanged for
+  at most one bounded rerun.
