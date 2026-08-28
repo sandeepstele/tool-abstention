@@ -1,0 +1,6 @@
+model: mlx-community/Qwen2.5-1.5B-Instruct-4bit
+revision: 8b403126fc14f14cfc99bb4cfa72ecbc129ea677
+seed: 0
+max_tokens: 256
+temperature: 0.0
+prompt_variant: protocol-strict

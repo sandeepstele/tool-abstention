@@ -41,6 +41,7 @@ from tool_abstention.productivity import (
     build_productivity_dataset,
     load_pairs,
 )
+from tool_abstention.protocol import build_protocol_repair_sft, build_protocol_stress
 from tool_abstention.records import EvaluationRecord, PredictionRecord
 from tool_abstention.schemas import SchemaKind, export_schemas, validate_record
 from tool_abstention.sft import build_sft_dataset, run_sft_training
@@ -94,6 +95,19 @@ def build_parser() -> argparse.ArgumentParser:
     )
     sft_data.add_argument("--internal", required=True, type=Path)
     sft_data.add_argument("--output", required=True, type=Path)
+
+    protocol_data = subparsers.add_parser(
+        "generate-protocol-stress", help="build internal-only protocol stress pairs"
+    )
+    protocol_data.add_argument("--config", required=True, type=Path)
+    protocol_data.add_argument("--output", required=True, type=Path)
+
+    repair_data = subparsers.add_parser(
+        "build-protocol-repair-sft", help="append internal protocol repair examples"
+    )
+    repair_data.add_argument("--base-sft", required=True, type=Path)
+    repair_data.add_argument("--stress", required=True, type=Path)
+    repair_data.add_argument("--output", required=True, type=Path)
 
     sft_train = subparsers.add_parser(
         "train-sft", help="train a pinned MLX LoRA adapter"
@@ -225,6 +239,16 @@ def main(argv: Sequence[str] | None = None) -> None:
             return
         if args.command == "build-sft":
             manifest = build_sft_dataset(args.internal, args.output)
+            print(json.dumps(manifest, indent=2))
+            return
+        if args.command == "generate-protocol-stress":
+            manifest = build_protocol_stress(args.config, args.output)
+            print(json.dumps(manifest, indent=2))
+            return
+        if args.command == "build-protocol-repair-sft":
+            manifest = build_protocol_repair_sft(
+                args.base_sft, args.stress, args.output
+            )
             print(json.dumps(manifest, indent=2))
             return
         if args.command == "train-sft":

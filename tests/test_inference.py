@@ -79,6 +79,10 @@ def test_prompt_variants_are_distinct_and_embed_tools_canonically() -> None:
         in embedded[0]["content"]
     )
     assert "{tools}" in prompt_policy(PromptVariant.EMBEDDED_TOOLS)
+    strict = task_messages(task, PromptVariant.PROTOCOL_STRICT)
+    assert "balanced braces" in strict[0]["content"]
+    assert "schema definitions" in prompt_policy(PromptVariant.PROTOCOL_STRICT)
+    assert strict[0]["content"] != task_messages(task)[0]["content"]
 
 
 def test_run_inference_resumes_and_preserves_order(tmp_path: Path) -> None:

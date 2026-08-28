@@ -1,4 +1,4 @@
-.PHONY: setup data sft-data sft-smoke sft-train sft-validation external-fetch external-prepare external-baseline baseline-smoke prompt-diagnostic capacity-diagnostic baseline-validation lint typecheck test check
+.PHONY: setup data protocol-data protocol-repair-data sft-data sft-smoke sft-train sft-validation external-fetch external-prepare external-baseline baseline-smoke prompt-diagnostic capacity-diagnostic baseline-validation lint typecheck test check
 
 setup:
 	uv sync --locked
@@ -12,6 +12,17 @@ sft-data: data
 	uv run tool-abstention build-sft \
 		--internal data/processed \
 		--output data/training/sft
+
+protocol-data:
+	uv run tool-abstention generate-protocol-stress \
+		--config configs/data/protocol-stress.yaml \
+		--output data/protocol-stress
+
+protocol-repair-data: sft-data protocol-data
+	uv run tool-abstention build-protocol-repair-sft \
+		--base-sft data/training/sft \
+		--stress data/protocol-stress \
+		--output data/training/sft-protocol-repair
 
 sft-smoke: sft-data
 	uv run --group inference tool-abstention train-sft \

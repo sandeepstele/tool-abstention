@@ -882,3 +882,42 @@ and AgentAbstain external evaluation partitions out of training.
 - Confirmed each new result directory contains raw predictions, evaluations,
   metrics, inference manifest, and malformed-call analysis. The two training
   configs differ from seed 0 only by their declared seed.
+
+## 2026-08-27 — Internal-only protocol-repair ablation
+
+### Implementation and tests
+
+- Added a deterministic protocol-stress generator with 16 train and 4 validation
+  CALL/CLARIFY pairs. Arguments cover nested objects, arrays, booleans, nulls,
+  numeric values, Unicode, and long structured payloads.
+- Added repair-SFT assembly that appends 32 train and 8 validation stress records
+  to the original 360/120 corpus. It rejects non-internal provenance, any declared
+  external source, test consumption, and ID collisions.
+- Added a `protocol-strict` inference prompt and CLI commands for generating stress
+  records and assembling repair data. Added fixture coverage for determinism,
+  provenance rejection, CLI behavior, and prompt rendering.
+- Generated manifests record zero external sources and `test_consumed=false`.
+  The held-out test hash remained
+  `76bbac17a10e87c9cb58aaaacf1b2be8c5dccbd22790c19e8e01a04c49f59bc8`.
+- Pre-training gate passed: Ruff clean, strict mypy clean over 42 source files, and
+  177 tests passed at 95.22% coverage.
+
+### Controlled experiments
+
+- Prompt-only strict JSON instructions failed the internal stress gate: exact
+  accuracy stayed 25.0% and protocol compliance fell from 62.5% to 50.0%. No BFCL
+  run was performed for this rejected prompt.
+- Trained one 196-batch seed-0 repair adapter from the pinned base model on the
+  392-example augmented corpus. Adapter SHA-256 is
+  `05fed69862ae6188bec4d81974d6a804432d8d5ea41637a8099ff581b7c76ee9`.
+- Repair SFT improved internal stress exact accuracy from 25.0% to 62.5% and
+  protocol compliance from 62.5% to 100.0%. It preserved original internal
+  validation accuracy at 95.83%, act at 100.0%, and abstention at 91.67%.
+- Because both internal gates passed, ran one BFCL external report. Malformed calls
+  fell from 62/640 (9.69%) to 13/640 (2.03%), but ABSTAIN accuracy collapsed from
+  84.17% to 58.33% and balanced accuracy from 91.71% to 79.17%.
+- Rejected the repair adapter. It fixes syntax largely by shifting toward CALL
+  behavior, violating the predeclared no-decision-regression criterion. DPO must
+  not initialize from it. The original three-seed SFT baseline remains selected.
+- Final gate passed again after documentation: Ruff clean, strict mypy clean over
+  42 source files, and all 177 tests passed with 95.22% aggregate coverage.

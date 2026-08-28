@@ -18,7 +18,11 @@ Across seeds 0, 1, and 2, SFT reached 94.72 ± 0.96% internal validation accurac
 and 89.72 ± 1.72% BFCL balanced accuracy (mean ± sample SD). **Next gate:** design
 an internal-data-only protocol intervention and implement preference-data
 contracts plus a small DPO smoke. The malformed rate is 6.41 ± 2.93%, confirming
-a real syntax regression despite improved external abstention.
+a real syntax regression despite improved external abstention. A subsequent
+internal-only repair ablation reduced malformed BFCL calls to 2.03% but collapsed
+BFCL abstention to 58.33%, so that adapter was rejected. The preference milestone
+must jointly represent syntax and decision negatives rather than optimize either
+in isolation.
 Public benchmark records remain evaluation-only, and the held-out test stays sealed.
 
 ---

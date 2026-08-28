@@ -44,6 +44,7 @@ class PromptVariant(StrEnum):
     NATIVE_FULL = "native-full"
     EMBEDDED_TOOLS = "embedded-tools"
     NATIVE_SHORT = "native-short"
+    PROTOCOL_STRICT = "protocol-strict"
 
 
 class InferenceBackend(Protocol):
@@ -83,6 +84,12 @@ When a tool is necessary, output exactly
 <tool_call>{\"name\":\"tool_name\",\"arguments\":{}}</tool_call>.
 Otherwise respond directly with no tool-call tags."""
 
+PROTOCOL_STRICT_INSTRUCTION = """When calling a tool, emit exactly one complete
+<tool_call>{"name":"visible_tool_name","arguments":{}}</tool_call> block. The
+payload must be strict JSON: double-quoted keys and strings, balanced braces and
+brackets, JSON true/false/null literals, the tool name at the payload root, and
+only the tool's declared arguments. Do not include prose or schema definitions."""
+
 
 def _openai_tool(tool: ToolDefinition) -> dict[str, Any]:
     return {
@@ -109,6 +116,8 @@ def task_messages(
     system_prompt = (
         SHORT_SYSTEM_PROMPT if variant is PromptVariant.NATIVE_SHORT else SYSTEM_PROMPT
     )
+    if variant is PromptVariant.PROTOCOL_STRICT:
+        system_prompt = f"{SYSTEM_PROMPT}\n\n{PROTOCOL_STRICT_INSTRUCTION}"
     if variant is PromptVariant.EMBEDDED_TOOLS:
         serialized_tools = canonical_json_bytes(
             [_openai_tool(tool) for tool in task.tools]
@@ -132,6 +141,8 @@ def prompt_policy(variant: PromptVariant) -> str:
         return SHORT_SYSTEM_PROMPT
     if variant is PromptVariant.EMBEDDED_TOOLS:
         return f"{SYSTEM_PROMPT}\n\n{EMBEDDED_TOOL_INSTRUCTION}"
+    if variant is PromptVariant.PROTOCOL_STRICT:
+        return f"{SYSTEM_PROMPT}\n\n{PROTOCOL_STRICT_INSTRUCTION}"
     return SYSTEM_PROMPT
 
 

@@ -41,6 +41,7 @@ All planning lives in [`docs/`](docs/). Read in order:
 | 14 | [sft-baseline.md](docs/14-sft-baseline.md) | SFT training evidence, results, and failure analysis |
 | 15 | [malformed-call-analysis.md](docs/15-malformed-call-analysis.md) | BFCL protocol regression taxonomy and diagnosis |
 | 16 | [sft-multiseed.md](docs/16-sft-multiseed.md) | Three-seed SFT uncertainty and external generalization |
+| 17 | [protocol-repair.md](docs/17-protocol-repair.md) | Internal syntax-repair ablation and rejected trade-off |
 
 Engineering activity and decisions are recorded in [`WORKLOG.md`](WORKLOG.md). The
 logging convention is defined in the implementation plan and applies to every
@@ -80,6 +81,8 @@ make external-fetch       # networked, one-time pinned snapshots
 make external-prepare     # network-free normalization and leakage audit
 make external-baseline    # local Metal inference + stored evaluation
 make sft-data             # internal train/validation only
+make protocol-data        # deterministic internal CALL/CLARIFY stress pairs
+make protocol-repair-data # augmented SFT corpus; no test or external data
 make sft-smoke            # 0.5B/20-step Metal training check
 make sft-train            # 1.5B seed-0 LoRA training
 make sft-validation       # adapter-aware internal validation
