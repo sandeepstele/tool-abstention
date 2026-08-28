@@ -71,13 +71,13 @@ every final validation metric exactly, and its hash differs from initialization.
 The training path took about 16 seconds after reference caching on the local Apple
 Metal device.
 
-## Limitations and next gate
+## Limitations and final disposition
 
 The smoke set is deliberately tiny and demonstrates numerical/runtime
 compatibility, not research effectiveness. A positive chosen reward is not itself
 required: DPO depends on the chosen-versus-rejected reward margin. Here both moved,
 but rejected completions were penalized much more strongly.
 
-The passed smoke permits one predeclared 1.5B seed-0 run from the original SFT
-adapter. Internal validation and protocol-stress gates must pass before BFCL is
-opened. BFCL remains reporting-only and cannot select or retry the checkpoint.
+The passed smoke permitted one predeclared 1.5B seed-0 run from the original SFT
+adapter. That run later failed its internal behavior gate, so BFCL was not opened
+and the adapter was rejected. See `20-dpo-seed0.md` for the recorded outcome.

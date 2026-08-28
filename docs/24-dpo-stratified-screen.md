@@ -43,9 +43,7 @@ competent initializer, mean normalization, conservative learning rate, bounded
 updates, and balanced paired data, standard offline DPO still destroyed correct
 CALL generation while its preference reward metrics looked perfect.
 
-No additional optimizer sweep or 1.5B DPO run is justified. The original SFT
-baseline remains selected. A future preference milestone must change the method,
-not merely tune this configuration—for example, a supervised-anchor objective or
-explicit KL/conservative regularization evaluated through generation at frequent
-checkpoints. That work should be separately planned rather than continued as an
-adaptive sweep.
+No additional standard-DPO sweep or 1.5B run was justified. The original SFT
+baseline remained selected. The subsequent bounded supervised-anchor experiment
+also failed its generation gates and closed the preference branch for this release;
+see `25-anchored-dpo-screen.md`.
