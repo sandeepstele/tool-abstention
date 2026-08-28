@@ -60,5 +60,5 @@ correctly permits native BFCL names containing uppercase letters and dots; the
 remaining regression and its deterministic taxonomy are documented in
 [`15-malformed-call-analysis.md`](15-malformed-call-analysis.md).
 
-The internal held-out test split remains untouched. Seeds 1 and 2 are required
-before reporting uncertainty or treating SFT as a finalized multi-seed baseline.
+The internal held-out test split remains untouched. Seeds 1 and 2 and aggregate
+uncertainty are reported in [`16-sft-multiseed.md`](16-sft-multiseed.md).

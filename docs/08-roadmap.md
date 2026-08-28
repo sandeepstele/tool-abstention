@@ -9,16 +9,16 @@ canonical contracts, executable tools, deterministic evaluation, grouped 60/20/2
 splits, test hashing, and the full manifest are implemented. The larger 600-pair
 roadmap target remains a pre-final-experiment expansion goal.
 
-**Phase 2 — SFT baseline: seed 0 complete.** The pinned 1.5B MLX model completed
+**Phase 2 — SFT baseline: three seeds complete.** The pinned 1.5B MLX model completed
 internal validation and the 640-record non-overlapping BFCL external decision
 benchmark on Metal. Evaluator calibration agrees with all 60 owner-verified
 adjudications. Raw outputs, manifests, metrics, and limitations are retained.
 
-The first corrected one-epoch SFT adapter reached 95.83% internal validation
-accuracy and 91.71% BFCL balanced accuracy. **Next gate:** repeat SFT with seeds 1
-and 2 using the frozen recipe, then compare protocol regressions before DPO. The
-seed-0 malformed analysis found 49/62 failures were structurally truncated JSON,
-not max-token truncation.
+Across seeds 0, 1, and 2, SFT reached 94.72 ± 0.96% internal validation accuracy
+and 89.72 ± 1.72% BFCL balanced accuracy (mean ± sample SD). **Next gate:** design
+an internal-data-only protocol intervention and implement preference-data
+contracts plus a small DPO smoke. The malformed rate is 6.41 ± 2.93%, confirming
+a real syntax regression despite improved external abstention.
 Public benchmark records remain evaluation-only, and the held-out test stays sealed.
 
 ---

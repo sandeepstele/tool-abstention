@@ -40,6 +40,7 @@ All planning lives in [`docs/`](docs/). Read in order:
 | 13 | [external-data.md](docs/13-external-data.md) | BFCL provenance, leakage controls, and baseline results |
 | 14 | [sft-baseline.md](docs/14-sft-baseline.md) | SFT training evidence, results, and failure analysis |
 | 15 | [malformed-call-analysis.md](docs/15-malformed-call-analysis.md) | BFCL protocol regression taxonomy and diagnosis |
+| 16 | [sft-multiseed.md](docs/16-sft-multiseed.md) | Three-seed SFT uncertainty and external generalization |
 
 Engineering activity and decisions are recorded in [`WORKLOG.md`](WORKLOG.md). The
 logging convention is defined in the implementation plan and applies to every
@@ -47,15 +48,18 @@ future implementation and experiment session.
 
 ## Status
 
-**Phase 2 — SFT baseline complete for seed 0.** The v1 300-pair data pipeline is
-complete. Controlled 0.5B prompt diagnostics and a pinned 1.5B capacity diagnostic
-have executed locally on Metal. The frozen 1.5B `native-full` baseline scored
+**Phase 2 — three-seed SFT baseline complete.** The v1 300-pair data pipeline is
+complete. Controlled 0.5B prompt diagnostics, a pinned 1.5B capacity diagnostic,
+and three frozen SFT seeds have executed locally on Metal. SFT averages 94.72 ±
+0.96% internal accuracy and 89.72 ± 1.72% BFCL balanced accuracy (mean ± sample
+SD). The frozen 1.5B `native-full` baseline scored
 62.5% calibrated accuracy, 83.33% act accuracy, 41.67% abstention accuracy, and
 25% paired accuracy on all 120 validation tasks. The calibrated evaluator agrees
 with all 60 owner-verified adjudications across behavior, semantics, and protocol
 validity. Held-out test data remains untouched. See
 [`docs/12-baseline-diagnostics.md`](docs/12-baseline-diagnostics.md),
 [`docs/13-external-data.md`](docs/13-external-data.md),
+[`docs/16-sft-multiseed.md`](docs/16-sft-multiseed.md),
 [`docs/08-roadmap.md`](docs/08-roadmap.md) and
 [`docs/11-implementation-plan.md`](docs/11-implementation-plan.md).
 

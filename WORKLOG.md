@@ -835,3 +835,50 @@ and AgentAbstain external evaluation partitions out of training.
   interventions as explicit ablations without training on BFCL.
 - Final gate passed: Ruff clean, strict mypy clean over 40 source files, and all
   170 tests passed with 95.05% aggregate coverage.
+
+## 2026-08-27 — Frozen SFT seeds 1 and 2
+
+### Execution
+
+- Added seed-specific training configurations that differ from the selected
+  seed-0 recipe only in `seed`. Kept the pinned model revision, shared SFT data
+  manifest, one-epoch schedule, batch/accumulation, LoRA, and evaluation settings.
+- Trained seed 1 for all 180 iterations on local Metal. Final validation loss was
+  0.013, peak memory was 4.204 GB, and adapter SHA-256 is
+  `388e04107c329fd55efca2d3be92817e81575c09c3dc4b4e60072df83710e6f4`.
+- The first seed-2 process was interrupted at iteration 155 by an attached tool
+  session ending. Preserved it as ignored `seed-2-interrupted`; did not evaluate or
+  report its iteration-135 checkpoint. Restarted from the base model and completed
+  all 180 iterations. Its repeated loss sequence matched the interrupted run.
+- Complete seed 2 final validation loss was 0.012, peak memory was 4.204 GB, and
+  adapter SHA-256 is
+  `0edbc9d1dcb9dd6f23c0742d2caf1c018b3ebecd0321d17573991e068f91f0f0`.
+
+### Evaluation and interpretation
+
+- Seed 1 internal accuracy was 94.17% (act 88.33%, abstain 100.00%, paired
+  88.33%); seed 2 was 94.17% (act 96.67%, abstain 91.67%, paired 88.33%).
+- Seed 1 BFCL decision/balanced accuracy was 91.25%/88.75%, with 5.47% malformed
+  calls. Seed 2 was 91.41%/88.71%, with 4.06% malformed calls.
+- Three-seed SFT mean ± sample SD is 94.72 ± 0.96% internal accuracy, 95.00 ±
+  6.01% act accuracy, 94.44 ± 4.81% internal abstention, 92.08 ± 1.31% BFCL
+  decision accuracy, and 89.72 ± 1.72% BFCL balanced accuracy.
+- The BFCL malformed-call mean is 6.41 ± 2.93%, still above the 1.72% base rate.
+  Seed 0 was unusually strong on external abstention and unusually weak on syntax;
+  the per-seed table is retained instead of presenting only aggregate values.
+- Wrote a canonical aggregate artifact at `results/sft/1.5b/summary.json` and a
+  human-readable analysis in `docs/16-sft-multiseed.md`.
+- The internal held-out test split remained sealed. No public benchmark record was
+  used for training or intervention design.
+
+### Verification
+
+- The first `make check` attempt could not initialize the sandboxed default uv
+  cache. Repeated with `UV_CACHE_DIR=/private/tmp/tool-abstention-uv-cache`; Ruff
+  formatting and lint passed, strict mypy passed over 40 source files, and all 170
+  tests passed with 95.05% aggregate coverage.
+- `git diff --check` passed. The held-out test file remained byte-identical with
+  SHA-256 `76bbac17a10e87c9cb58aaaacf1b2be8c5dccbd22790c19e8e01a04c49f59bc8`.
+- Confirmed each new result directory contains raw predictions, evaluations,
+  metrics, inference manifest, and malformed-call analysis. The two training
+  configs differ from seed 0 only by their declared seed.
